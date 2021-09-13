@@ -1,6 +1,8 @@
-from flask import Flask 
+import flask
+from flask import Flask
+
 from NepseLib import Nepse
-import json 
+
 
 app = Flask(__name__)
 
@@ -28,40 +30,55 @@ def getIndex():
 def getPriceVolume():
     import time
     t1 = time.time()
-    response = nepse.getPriceVolume()
-    
-    print(response)
+    response = flask.jsonify(nepse.getPriceVolume())
+    response.headers.add('Access-Control-Allow-Origin', '*')
     print("time req ", (time.time() - t1))
-    return json.dumps(response)
+    return response
 
 @app.route(routes["Summary"])
 def getSummary():
-    return json.dumps(nepse.getSummary())
+    response = flask.jsonify(nepse.getSummary())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["TopTenScrips"])
 def getTopTenScrips():
-    return json.dumps(nepse.getTopTenScrips())
+    response = flask.jsonify(nepse.getTopTenScrips())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["SupplyDemand"])
 def getSupplyDemand():
-    return json.dumps(nepse.getSupplyDemand())
+    response = flask.jsonify(nepse.getSupplyDemand())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["TopGainers"])
 def getTopGainers():
-    return json.dumps(nepse.getTopGainers())
+    response = flask.jsonify(nepse.getTopGainers())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["TopLosers"])
 def getTopLosers():
-   return json.dumps(nepse.getTopLosers())
+    response = flask.jsonify(nepse.getTopLosers())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["IsNepseOpen"])
 def isNepseOpen():
-   return json.dumps(nepse.isNepseOpen())
+    response = flask.jsonify(nepse.isNepseOpen())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["NepseIndex"])
 def getNepseIndex():
-    return json.dumps(nepse.getNepseIndex())
+    response = flask.jsonify(nepse.getNepseIndex())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route(routes["NepseSubIndices"])
 def getNepseSubIndices():
-    return json.dumps(nepse.getNepseSubIndices())
+    response = flask.jsonify(nepse.getNepseSubIndices())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
