@@ -26,7 +26,12 @@ def getIndex():
 
 @app.route(routes['PriceVolume'])
 def getPriceVolume():
+    import time
+    t1 = time.time()
     response = nepse.getPriceVolume()
+    
+    print(response)
+    print("time req ", (time.time() - t1))
     return json.dumps(response)
 
 @app.route(routes["Summary"])
