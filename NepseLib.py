@@ -1,4 +1,7 @@
-import requests 
+import requests
+from collections import defaultdict
+from json import JSONDecodeError
+import json
 
 class TokenParser():
     def __init__(self):
@@ -101,20 +104,28 @@ class TokenParser():
 
 class Nepse:
     def __init__(self):
+        self.token_request_count = 0 
+        self.total_request_count = 0
+        
         self.token_parser     = TokenParser()
         
         self.token_url            = "https://newweb.nepalstock.com/api/authenticate/prove"
+        self.refresh_url          = "https://newweb.nepalstock.com/api/authenticate/refresh-token"
         
-        self.price_volume_url     = "https://www.nepalstock.com.np/api/nots/securityDailyTradeStat/58"
-        self.summary_url          = "https://newweb.nepalstock.com.np/api/nots/market-summary/"
-        self.top_ten_scrips_url   = "https://newweb.nepalstock.com.np/api/nots/top-ten/trade-qty"
-        self.supply_demand_url    = "https://newweb.nepalstock.com.np/api/nots/nepse-data/supplydemand"
-        self.turnover_url         = "https://newweb.nepalstock.com.np/api/nots/top-ten/turnover"
-        self.top_gainers_url      = "https://newweb.nepalstock.com.np/api/nots/top-ten/top-gainer"
-        self.top_losers_url       = "https://newweb.nepalstock.com.np/api/nots/top-ten/top-loser"
-        self.nepse_open_url       = "https://newweb.nepalstock.com.np/api/nots/nepse-data/market-open"
-        self.nepse_index_url      = "https://newweb.nepalstock.com.np/api/nots/nepse-index"
-        self.nepse_subindices_url = "https://newweb.nepalstock.com/api/nots"
+        self.api_end_points = {
+                                "price_volume_url"     : "https://www.nepalstock.com.np/api/nots/securityDailyTradeStat/58",
+                                "summary_url"          : "https://newweb.nepalstock.com.np/api/nots/market-summary/",
+                                "top_ten_scrips_url"   : "https://newweb.nepalstock.com.np/api/nots/top-ten/trade-qty",
+                                "supply_demand_url"    : "https://newweb.nepalstock.com.np/api/nots/nepse-data/supplydemand",
+                                "turnover_url"         : "https://newweb.nepalstock.com.np/api/nots/top-ten/turnover",
+                                "top_gainers_url"      : "https://newweb.nepalstock.com.np/api/nots/top-ten/top-gainer",
+                                "top_losers_url"       : "https://newweb.nepalstock.com.np/api/nots/top-ten/top-loser",
+                                "nepse_open_url"       : "https://newweb.nepalstock.com.np/api/nots/nepse-data/market-open",
+                                "nepse_index_url"      : "https://newweb.nepalstock.com.np/api/nots/nepse-index",
+                                "nepse_subindices_url" : "https://newweb.nepalstock.com/api/nots",
+                              }
+        
+        self.api_end_point_access_token = defaultdict(lambda : False)
         
         self.headers= {
                             'Host': 'newweb.nepalstock.com',
@@ -130,61 +141,108 @@ class Nepse:
                         }
     ###############################################PRIVATE METHODS###############################################
     
-    def requestAPI(self, url, access_token=None):
-        if access_token is not None:
-            headers = {'Authorization': f'Salter {access_token}', **self.headers}
-        else:
-            headers = self.headers
+    def requestAPI(self, url):
+        self.incrementTotalRequestCount()
+        
+        headers = self.headers
+        if url in self.api_end_points.values():
+            access_token, request_token = self.getTokenForURL(url)
+            headers = {'Authorization': f'Salter {access_token}', **self.headers}            
+        ##to do check if request fails, two possibilities (network error, token error) each should be handled 
+        try:
+            return requests.get(url, headers=headers).json()
+        except JSONDecodeError:
             
-        return requests.get(url, headers=headers).json()
+#             print('json decode error index rearranged')
+#             a, b = self.getTokenForURL(url)
+#             self.api_end_point_access_token[url] = (b, a)
+                   
+            self.refreshTokenForURL(url)
+            return self.requestAPI(url) 
+    
+    #token is unique for each url, when token is requested, the access token received when first used for accessing a url can be 
+    #used to send multiple request for the same url without requesting new access token.
+    def getTokenForURL(self, url):
+        if self.api_end_point_access_token[url] is False:
+            token_response = self.getValidToken()
+            self.api_end_point_access_token[url] = token_response
         
+        return self.api_end_point_access_token[url]
+    
+    def refreshTokenForURL(self, url):
+        print(f'token refresh: {url}')
         
-    def getValidToken(self):
-        token_response = self.requestAPI(url=self.token_url)
+        access_token, refresh_token = self.api_end_point_access_token[url]
         
+        headers= {**self.headers, 
+                    "Content-Type": "application/json",
+                    "Content-Length": 160,
+                    "Authorization": f"Salter {access_token}"
+                 }
         
+        refresh_key = requests.post(self.refresh_url, 
+                                    headers=headers, 
+                                    data=json.dumps({'refreshToken':refresh_token}))
+        
+        # refresh_key.request.body
+        try:
+            self.api_end_point_access_token[url] = self.getValidTokenFromJSON( refresh_key.json() )
+        except JSONDecodeError:
+            self.resetTokenForURL(url)
+        
+    def resetTokenForURL(self, url):
+        self.api_end_point_access_token[url] = False
+        
+#         self.api_end_point_access_token[url] = False
+    def getValidTokenFromJSON(self, token_response):
         for salt_index in range(1, 6):
             token_response[f'salt{salt_index}'] = int(token_response[f'salt{salt_index}'])
         
         #returns access_token only, refresh token is not used right now
-        return self.token_parser.parse_token_response(token_response)[0]
+        return self.token_parser.parse_token_response(token_response)
+        
+    def getValidToken(self):
+        self.incrementTokenRequestCount()
+        
+        token_response = self.requestAPI(url=self.token_url)        
+        return self.getValidTokenFromJSON(token_response)
+    
+    def incrementTokenRequestCount(self):
+        self.token_request_count += 1
+        
+    def incrementTotalRequestCount(self):
+        self.total_request_count += 1
     
     ###############################################PUBLIC METHODS###############################################
+    def getTotalRequestCount(self):
+        return self.total_request_count
     
+    def getTokenRequestCount(self):
+        return self.token_request_count
+        
     def getPriceVolume(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.price_volume_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['price_volume_url'])
     
     def getSummary(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.summary_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['summary_url'])
     
     def getTopTenScrips(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.top_ten_scrips_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['top_ten_scrips_url'])
     
     def getSupplyDemand(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.supply_demand_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['supply_demand_url'])
     
     def getTopGainers(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.top_gainers_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['top_gainers_url'])
     
     def getTopLosers(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.top_losers_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['top_losers_url'])
     
     def isNepseOpen(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.nepse_open_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['nepse_open_url'])
     
     def getNepseIndex(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.nepse_index_url, access_token=access_token)
+        return self.requestAPI(url=self.api_end_points['nepse_index_url'])
     
     def getNepseSubIndices(self):
-        access_token = self.getValidToken()
-        return self.requestAPI(url=self.nepse_subindices_url, access_token=access_token)
-
-
+        return self.requestAPI(url=self.api_end_points['nepse_subindices_url'])
