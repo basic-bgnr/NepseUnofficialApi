@@ -147,18 +147,16 @@ class Nepse:
         headers = self.headers
         if url in self.api_end_points.values():
             access_token, request_token = self.getTokenForURL(url)
-            headers = {'Authorization': f'Salter {access_token}', **self.headers}            
-        ##to do check if request fails, two possibilities (network error, token error) each should be handled 
-        try:
-            return requests.get(url, headers=headers).json()
-        except JSONDecodeError:
-            
-#             print('json decode error index rearranged')
-#             a, b = self.getTokenForURL(url)
-#             self.api_end_point_access_token[url] = (b, a)
-                   
+            headers = {'Authorization': f'Salter {access_token}', **self.headers}
+        
+        
+        response = requests.get(url, headers=headers)
+        if (response.status_code != 200):
             self.refreshTokenForURL(url)
             return self.requestAPI(url) 
+        
+        return response.json()
+            
     
     #token is unique for each url, when token is requested, the access token received when first used for accessing a url can be 
     #used to send multiple request for the same url without requesting new access token.
@@ -173,22 +171,23 @@ class Nepse:
         print(f'token refresh: {url}')
         
         access_token, refresh_token = self.api_end_point_access_token[url]
-        
+
+        data=json.dumps({'refreshToken':refresh_token})
+
         headers= {**self.headers, 
                     "Content-Type": "application/json",
-                    "Content-Length": 160,
+                    "Content-Length": str(len(data)),
                     "Authorization": f"Salter {access_token}"
                  }
         
         refresh_key = requests.post(self.refresh_url, 
                                     headers=headers, 
-                                    data=json.dumps({'refreshToken':refresh_token}))
+                                    data=data)
         
-        # refresh_key.request.body
-        try:
-            self.api_end_point_access_token[url] = self.getValidTokenFromJSON( refresh_key.json() )
-        except JSONDecodeError:
+        if refresh_key.status_code != 200:
             self.resetTokenForURL(url)
+        else:
+            self.api_end_point_access_token[url] = self.getValidTokenFromJSON( refresh_key.json() )
         
     def resetTokenForURL(self, url):
         self.api_end_point_access_token[url] = False

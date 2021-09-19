@@ -5,6 +5,8 @@ from NepseLib import Nepse
 
 
 app = Flask(__name__)
+app.config['PROPAGATE_EXCEPTIONS'] = True
+
 
 nepse = Nepse()
 
