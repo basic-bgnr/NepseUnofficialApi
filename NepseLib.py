@@ -108,21 +108,23 @@ class Nepse:
         self.total_request_count = 0
         
         self.token_parser     = TokenParser()
+
+        self.base_url             = "https://www.nepalstock.com.np"
         
-        self.token_url            = "https://newweb.nepalstock.com/api/authenticate/prove"
-        self.refresh_url          = "https://newweb.nepalstock.com/api/authenticate/refresh-token"
+        self.token_url            = f"{self.base_url}/api/authenticate/prove"
+        self.refresh_url          = f"{self.base_url}/api/authenticate/refresh-token"
         
         self.api_end_points = {
-                                "price_volume_url"     : "https://www.nepalstock.com.np/api/nots/securityDailyTradeStat/58",
-                                "summary_url"          : "https://newweb.nepalstock.com.np/api/nots/market-summary/",
-                                "top_ten_scrips_url"   : "https://newweb.nepalstock.com.np/api/nots/top-ten/trade-qty",
-                                "supply_demand_url"    : "https://newweb.nepalstock.com.np/api/nots/nepse-data/supplydemand",
-                                "turnover_url"         : "https://newweb.nepalstock.com.np/api/nots/top-ten/turnover",
-                                "top_gainers_url"      : "https://newweb.nepalstock.com.np/api/nots/top-ten/top-gainer",
-                                "top_losers_url"       : "https://newweb.nepalstock.com.np/api/nots/top-ten/top-loser",
-                                "nepse_open_url"       : "https://newweb.nepalstock.com.np/api/nots/nepse-data/market-open",
-                                "nepse_index_url"      : "https://newweb.nepalstock.com.np/api/nots/nepse-index",
-                                "nepse_subindices_url" : "https://newweb.nepalstock.com/api/nots",
+                                "price_volume_url"     : f"{self.base_url}/api/nots/securityDailyTradeStat/58",
+                                "summary_url"          : f"{self.base_url}/api/nots/market-summary/",
+                                "top_ten_scrips_url"   : f"{self.base_url}/api/nots/top-ten/trade-qty",
+                                "supply_demand_url"    : f"{self.base_url}/api/nots/nepse-data/supplydemand",
+                                "turnover_url"         : f"{self.base_url}/api/nots/top-ten/turnover",
+                                "top_gainers_url"      : f"{self.base_url}/api/nots/top-ten/top-gainer",
+                                "top_losers_url"       : f"{self.base_url}/api/nots/top-ten/top-loser",
+                                "nepse_open_url"       : f"{self.base_url}/api/nots/nepse-data/market-open",
+                                "nepse_index_url"      : f"{self.base_url}/api/nots/nepse-index",
+                                "nepse_subindices_url" : f"{self.base_url}/api/nots",
                               }
         
         self.api_end_point_access_token = defaultdict(lambda : False)
