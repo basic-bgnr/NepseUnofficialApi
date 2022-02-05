@@ -115,6 +115,12 @@ class Nepse:
         
         self.token_url            = f"{self.base_url}/api/authenticate/prove"
         self.refresh_url          = f"{self.base_url}/api/authenticate/refresh-token"
+
+        self.post_payload_id      = None
+
+        self.company_symbol_id_keymap = None
+        
+        self.floor_sheet_size = 500
         
         self.api_end_points = {
                                 "price_volume_url"     : f"{self.base_url}/api/nots/securityDailyTradeStat/58",
@@ -129,19 +135,50 @@ class Nepse:
                                 "nepse_subindices_url" : f"{self.base_url}/api/nots",
                                 "nepse_isopen"         : f"{self.base_url}/api/nots/nepse-data/market-open",
 
+                                "company_list_url"     : f"{self.base_url}/api/nots/company/list",
+
+                                ###graph data api (these requires post request) ####
+                                "nepse_index_daily_graph"          : f"{self.base_url}/api/nots/graph/index/58",
+                                "sensitive_index_daily_graph"      : f"{self.base_url}/api/nots/graph/index/57",
+                                "float_index_daily_graph"          : f"{self.base_url}/api/nots/graph/index/62",
+                                "sensitive_float_index_daily_graph": f"{self.base_url}/api/nots/graph/index/63",
+                                
+                                ##sub index graph##
+                                "banking_sub_index_graph"          : f"{self.base_url}/api/nots/graph/index/51",
+                                "development_bank_sub_index_graph" : f"{self.base_url}/api/nots/graph/index/55",
+                                "finance_sub_index_graph"          : f"{self.base_url}/api/nots/graph/index/60",
+                                "hotel_tourism_sub_index_graph"    : f"{self.base_url}/api/nots/graph/index/52",
+                                "hydro_sub_index_graph"            : f"{self.base_url}/api/nots/graph/index/54",
+                                "investment_sub_index_graph"       : f"{self.base_url}/api/nots/graph/index/67",
+                                "life_insurance_sub_index_graph"   : f"{self.base_url}/api/nots/graph/index/65",
+                                "manufacturing_sub_index_graph"    : f"{self.base_url}/api/nots/graph/index/56",
+                                "microfinance_sub_index_graph"     : f"{self.base_url}/api/nots/graph/index/64",
+                                "mutual_fund_sub_index_graph"      : f"{self.base_url}/api/nots/graph/index/66",
+                                "non_life_insurance_sub_index_graph": f"{self.base_url}/api/nots/graph/index/59",
+                                "others_sub_index_graph"            : f"{self.base_url}/api/nots/graph/index/53",
+                                "trading_sub_index_graph"           : f"{self.base_url}/api/nots/graph/index/61",
+
+                                ##company_graph_data (add company id after the frontslash)##
+                                "company_daily_graph"               : f"{self.base_url}/api/nots/market/graphdata/daily/",
+                                "company_details"                   : f"{self.base_url}/api/nots/security/",
+                                "company_price_volume_history"      : f"{self.base_url}/api/nots/market/security/price/",
+                                "company_floorsheet"                : f"{self.base_url}/api/nots/security/floorsheet/",
+
+                                "floor_sheet"                       : f"{self.base_url}/api/nots/nepse-data/floorsheet",
+
                                 "todays_price"         : f"{self.base_url}/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06",
                               }
         
         self.api_end_point_access_token = defaultdict(lambda : False)
         
         self.headers= {
-                            'Host': 'newweb.nepalstock.com',
+                            'Host': 'www.nepalstock.com.np',
                             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0',
                             'Accept': 'application/json, text/plain, */*',
                             'Accept-Language': 'en-US,en;q=0.5',
                             'Accept-Encoding': 'gzip, deflate, br',
                             'Connection': 'keep-alive',
-                            'Referer': 'https://newweb.nepalstock.com/',
+                            'Referer': 'https://www.nepalstock.com.np/',
                             'Pragma': 'no-cache',
                             'Cache-Control': 'no-cache',
                             'TE': 'Trailers',
@@ -167,17 +204,17 @@ class Nepse:
     def requestPOSTAPI(self, url):
         self.incrementTotalRequestCount()
         
-        if url in self.api_end_points.values():
-            access_token, request_token = self.getTokenForURL(url)
-            
-            headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
-            response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadID()}))
-            
-            if (response.status_code != 200):
-                self.refreshTokenForURL(url)
-                return self.requestAPI(url)
-            
-            return response.json()
+        
+        access_token, request_token = self.getTokenForURL(url)
+        
+        headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
+        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadID()}))
+        
+        if (response.status_code != 200):
+            self.refreshTokenForURL(url)
+            return self.requestAPI(url)
+        
+        return response.json()
             
     
     #token is unique for each url, when token is requested, the access token received when first used for accessing a url can be 
@@ -249,9 +286,15 @@ class Nepse:
             731, 852, 384, 565, 596, 451, 772, 624, 691,
           ]
     
+    def _getPOSTPayloadID(self):
+        if self.post_payload_id is None:
+            dummy_id = self.getDummyID()
+            self.post_payload_id = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+        
+        return self.post_payload_id
+    
     def getPOSTPayloadID(self):
-        dummy_id = self.getDummyID()
-        return self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+        return self._getPOSTPayloadID()
     
     ###############################################PUBLIC METHODS###############################################
     def getMarketStatus(self):
@@ -289,3 +332,93 @@ class Nepse:
     
     def getNepseSubIndices(self):
         return self.requestAPI(url=self.api_end_points['nepse_subindices_url'])
+    
+    def getCompanyList(self):
+        return self.requestAPI(url=self.api_end_points['company_list_url'])
+    
+    def getCompanyIDKeyMap(self):
+        if self.company_symbol_id_keymap is None:
+            company_list = self.getCompanyList()
+            self.company_symbol_id_keymap = {company['symbol']:company['id'] for company in company_list}
+        return self.company_symbol_id_keymap
+    
+    #####api requiring post method 
+    def getDailyNepseIndexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['nepse_index_daily_graph'])
+
+    def getDailySensitiveIndexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['sensitive_index_daily_graph'])
+
+    def getDailyFloatIndexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['float_index_daily_graph'])
+    
+    def getDailySensitiveFloatIndexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['sensitive_float_index_daily_graph'])
+
+    def getDailyBankSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['banking_sub_index_graph'])
+    def getDailyDevelopmentBankSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['development_bank_sub_index_graph'])
+    def getDailyFinanceSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['finance_sub_index_graph'])
+    def getDailyHotelTourismSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['hotel_tourism_sub_index_graph'])
+    def getDailyHydroSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['hydro_sub_index_graph'])
+    def getDailyInvestmentSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['investment_sub_index_graph'])
+    def getDailyLifeInsuranceSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['life_insurance_sub_index_graph'])
+    def getDailyManufacturingSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['manufacturing_sub_index_graph'])
+    def getDailyMicrofinanceSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['microfinance_sub_index_graph'])
+    def getDailyMutualfundSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['mutual_fund_sub_index_graph'])
+    def getDailyNonLifeInsuranceSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['non_life_insurance_sub_index_graph'])
+    def getDailyOthersSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['others_sub_index_graph'])
+    def getDailyTradingSubindexGraph(self):
+        return self.requestPOSTAPI(url=self.api_end_points['trading_sub_index_graph'])
+    
+    def getCompanyDailyPriceGraph(self, symbol):
+        company_id = self.getCompanyIDKeyMap()[symbol]
+        return self.requestPOSTAPI(url=f"{self.api_end_points['company_daily_graph']}{company_id}")
+    
+    def getCompanyDetails(self, symbol):
+        company_id = self.getCompanyIDKeyMap()[symbol]
+        return self.requestPOSTAPI(url=f"{self.api_end_points['company_details']}{company_id}")
+
+    ##unfinished 
+    def getCompanyPriceVolumeHistory(self, symbol):
+        company_id = self.getCompanyIDKeyMap()[symbol]
+        return self.requestPOSTAPI(url=f"{self.api_end_points['company_price_volume_history']}{company_id}")
+    
+    def getFloorSheet(self):
+        url = f"{self.api_end_points['floor_sheet']}?=&size={self.floor_sheet_size}&sort=contractId,asc"
+        sheet = self.requestPOSTAPI(url=url)
+        floor_sheets = sheet['floorsheets']['content']
+        for page in range(1, sheet['floorsheets']['totalPages']+1):
+            next_sheet = self.requestPOSTAPI(url=f"{url}&page={page}")
+            next_floor_sheet = next_sheet['floorsheets']['content']
+            floor_sheets.extend(next_floor_sheet)
+        return floor_sheets
+    
+    def getFloorSheetOf(self, symbol):
+        company_id = self.getCompanyIDKeyMap()[symbol]
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?=&size={self.floor_sheet_size}&sort=contractId,asc&businessDate={date.isoformat(date.today())}"
+        sheet = self.requestPOSTAPI(url=url)
+        floor_sheets = sheet['floorsheets']['content']
+        for page in range(1, sheet['floorsheets']['totalPages']+1):
+            next_sheet = self.requestPOSTAPI(url=f"{url}&page={page}")
+            next_floor_sheet = next_sheet['floorsheets']['content']
+            floor_sheets.extend(next_floor_sheet)
+        return floor_sheets
+
+
+def test():
+    a = Nepse()
+    print(a.getFloorSheetOf("MLBBL"))
+if __name__ == '__main__':
+    test()
