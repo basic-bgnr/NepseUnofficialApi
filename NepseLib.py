@@ -4,6 +4,7 @@ from json import JSONDecodeError
 import json
 import time
 from datetime import date
+import tqdm 
 
 class TokenParser():
     def __init__(self):
@@ -112,6 +113,7 @@ class Nepse:
         self.token_parser     = TokenParser()
 
         self.base_url             = "https://www.nepalstock.com.np"
+        # self.base_url               = "https://newweb.nepalstock.com"
         
         self.token_url            = f"{self.base_url}/api/authenticate/prove"
         self.refresh_url          = f"{self.base_url}/api/authenticate/refresh-token"
@@ -172,13 +174,14 @@ class Nepse:
         self.api_end_point_access_token = defaultdict(lambda : False)
         
         self.headers= {
-                            'Host': 'www.nepalstock.com.np',
+                            #host doesn't work with https prefix so removing it
+                            'Host': f'{self.base_url[self.base_url.index("w"):]}',
                             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0',
                             'Accept': 'application/json, text/plain, */*',
                             'Accept-Language': 'en-US,en;q=0.5',
                             'Accept-Encoding': 'gzip, deflate, br',
                             'Connection': 'keep-alive',
-                            'Referer': 'https://www.nepalstock.com.np/',
+                            'Referer': f'{self.base_url}',
                             'Pragma': 'no-cache',
                             'Cache-Control': 'no-cache',
                             'TE': 'Trailers',
@@ -189,7 +192,7 @@ class Nepse:
         self.incrementTotalRequestCount()
         
         headers = self.headers
-        if url in self.api_end_points.values():
+        if url in self.api_end_points.values(): # this is done so that get request to api/authenticate doesnt fail, since it doesnt require authorization headers
             access_token, request_token = self.getTokenForURL(url)
             headers = {'Authorization': f'Salter {access_token}', **self.headers}
         
@@ -212,7 +215,7 @@ class Nepse:
         
         if (response.status_code != 200):
             self.refreshTokenForURL(url)
-            return self.requestAPI(url)
+            return self.requestPOSTAPI(url)
         
         return response.json()
             
@@ -261,8 +264,7 @@ class Nepse:
         
     def getValidToken(self):
         self.incrementTokenRequestCount()
-        
-        token_response = self.requestAPI(url=self.token_url)        
+        token_response = self.requestAPI(url=self.token_url)  
         return self.getValidTokenFromJSON(token_response)
     
     def incrementTokenRequestCount(self):
@@ -395,11 +397,13 @@ class Nepse:
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(url=f"{self.api_end_points['company_price_volume_history']}{company_id}")
     
-    def getFloorSheet(self):
+    def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?=&size={self.floor_sheet_size}&sort=contractId,asc"
         sheet = self.requestPOSTAPI(url=url)
         floor_sheets = sheet['floorsheets']['content']
-        for page in range(1, sheet['floorsheets']['totalPages']+1):
+        page_range = range(1, sheet['floorsheets']['totalPages']+1)
+        pages = tqdm.tqdm(page_range) if show_progress else page_range
+        for page in pages:
             next_sheet = self.requestPOSTAPI(url=f"{url}&page={page}")
             next_floor_sheet = next_sheet['floorsheets']['content']
             floor_sheets.extend(next_floor_sheet)
@@ -419,6 +423,8 @@ class Nepse:
 
 def test():
     a = Nepse()
-    print(a.getFloorSheetOf("MLBBL"))
+    print(a.getFloorSheet(show_progress=True))
+    # print(a.getFloorSheetOf(symbol="MLBBL"))
+    # print(a.getValidToken())
 if __name__ == '__main__':
     test()
