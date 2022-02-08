@@ -113,7 +113,6 @@ class Nepse:
         self.token_parser     = TokenParser()
 
         self.base_url             = "https://www.nepalstock.com.np"
-        # self.base_url               = "https://newweb.nepalstock.com"
         
         self.token_url            = f"{self.base_url}/api/authenticate/prove"
         self.refresh_url          = f"{self.base_url}/api/authenticate/refresh-token"
@@ -423,7 +422,7 @@ class Nepse:
 
 def test():
     a = Nepse()
-    print(a.getFloorSheet(show_progress=True))
+    a.getFloorSheet(show_progress=True)
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
 if __name__ == '__main__':
