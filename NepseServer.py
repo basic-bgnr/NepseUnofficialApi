@@ -60,7 +60,7 @@ def getTopTenTransactionScrips():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 @app.route(routes["TopTenTurnoverScrips"])
-def getTopTenScrips():
+def getTopTenTurnoverScrips():
     response = flask.jsonify(nepse.getTopTenTurnoverScrips())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
