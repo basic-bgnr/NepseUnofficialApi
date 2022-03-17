@@ -126,11 +126,11 @@ class Nepse:
         self.api_end_points = {
                                 "price_volume_url"     : f"{self.base_url}/api/nots/securityDailyTradeStat/58",
                                 "summary_url"          : f"{self.base_url}/api/nots/market-summary/",
-                                "top_ten_scrips_url"   : f"{self.base_url}/api/nots/top-ten/trade-qty",
                                 "supply_demand_url"    : f"{self.base_url}/api/nots/nepse-data/supplydemand",
                                 "turnover_url"         : f"{self.base_url}/api/nots/top-ten/turnover",
                                 "top_gainers_url"      : f"{self.base_url}/api/nots/top-ten/top-gainer",
                                 "top_losers_url"       : f"{self.base_url}/api/nots/top-ten/top-loser",
+                                "top_ten_scrips_url"   : f"{self.base_url}/api/nots/top-ten/trade-qty",
                                 "nepse_open_url"       : f"{self.base_url}/api/nots/nepse-data/market-open",
                                 "nepse_index_url"      : f"{self.base_url}/api/nots/nepse-index",
                                 "nepse_subindices_url" : f"{self.base_url}/api/nots",
@@ -383,7 +383,8 @@ class Nepse:
     def getDailyTradingSubindexGraph(self):
         return self.requestPOSTAPI(url=self.api_end_points['trading_sub_index_graph'])
     
-    def getCompanyDailyPriceGraph(self, symbol):
+    def getDailyScripPriceGraph(self, symbol):
+        # return self.getCompanyIDKeyMap()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(url=f"{self.api_end_points['company_daily_graph']}{company_id}")
     
@@ -422,8 +423,10 @@ class Nepse:
 
 def test():
     a = Nepse()
-    a.getFloorSheet(show_progress=True)
+    # a.getFloorSheet(show_progress=True)
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
+    print(a.getDailyNepseIndexGraph())
+
 if __name__ == '__main__':
     test()

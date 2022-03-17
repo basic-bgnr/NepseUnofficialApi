@@ -1,5 +1,5 @@
 import flask
-from flask import Flask
+from flask import Flask, request
 
 from NepseLib import Nepse
 
@@ -20,7 +20,11 @@ routes = {
             'TopLosers'      : '/TopLosers',
             'IsNepseOpen'    : '/IsNepseOpen',
             'NepseIndex'     : '/NepseIndex',
-            'NepseSubIndices': '/NepseSubIndices'
+            'NepseSubIndices': '/NepseSubIndices',
+            'DailyNepseIndexGraph': '/DailyNepseIndexGraph',
+
+            'DailyScripPriceGraph': '/DailyScripPriceGraph',
+            'CompanyList': '/CompanyList',
          }
 
 @app.route("/")
@@ -84,3 +88,26 @@ def getNepseSubIndices():
     response = flask.jsonify(nepse.getNepseSubIndices())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+@app.route(routes["DailyNepseIndexGraph"])
+def getDailyNepseIndexGraph():
+        response = flask.jsonify(nepse.getDailyNepseIndexGraph())
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response 
+
+@app.route(routes["DailyScripPriceGraph"])
+def getDailyScripPriceGraph():
+        args = request.args
+        param_scrip_name = args.get('symbol')
+        print(param_scrip_name)
+        response = flask.jsonify(nepse.getDailyScripPriceGraph(param_scrip_name))
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+
+
+@app.route(routes["CompanyList"])
+def getCompanyList():
+        response = flask.jsonify({'company_list': list(nepse.getCompanyIDKeyMap().keys())})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
