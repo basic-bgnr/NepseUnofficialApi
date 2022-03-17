@@ -14,10 +14,12 @@ nepse = Nepse()
 routes = {  
             'PriceVolume'    : '/PriceVolume',
             'Summary'        : '/Summary',
-            'TopTenScrips'   : '/TopTenScrips',
             'SupplyDemand'   : '/SupplyDemand',
             'TopGainers'     : '/TopGainers',
             'TopLosers'      : '/TopLosers',
+            'TopTenTradeScrips'         : '/TopTenTradeScrips',
+            'TopTenTurnoverScrips'      : '/TopTenTurnoverScrips',
+            'TopTenTransactionScrips'   : '/TopTenTransactionScrips',
             'IsNepseOpen'    : '/IsNepseOpen',
             'NepseIndex'     : '/NepseIndex',
             'NepseSubIndices': '/NepseSubIndices',
@@ -47,9 +49,19 @@ def getSummary():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
-@app.route(routes["TopTenScrips"])
+@app.route(routes["TopTenTradeScrips"])
+def getTopTenTradeScrips():
+    response = flask.jsonify(nepse.getTopTenTradeScrips())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+@app.route(routes["TopTenTransactionScrips"])
+def getTopTenTransactionScrips():
+    response = flask.jsonify(nepse.getTopTenTransactionScrips())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+@app.route(routes["TopTenTurnoverScrips"])
 def getTopTenScrips():
-    response = flask.jsonify(nepse.getTopTenScrips())
+    response = flask.jsonify(nepse.getTopTenTurnoverScrips())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 

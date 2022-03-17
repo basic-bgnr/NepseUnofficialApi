@@ -130,7 +130,9 @@ class Nepse:
                                 "turnover_url"         : f"{self.base_url}/api/nots/top-ten/turnover",
                                 "top_gainers_url"      : f"{self.base_url}/api/nots/top-ten/top-gainer",
                                 "top_losers_url"       : f"{self.base_url}/api/nots/top-ten/top-loser",
-                                "top_ten_scrips_url"   : f"{self.base_url}/api/nots/top-ten/trade-qty",
+                                "top_ten_trade_url"         : f"{self.base_url}/api/nots/top-ten/trade",
+                                "top_ten_transaction_url"   : f"{self.base_url}/api/nots/top-ten/transaction",
+                                "top_ten_turnover_url"      : f"{self.base_url}/api/nots/top-ten/turnover",
                                 "nepse_open_url"       : f"{self.base_url}/api/nots/nepse-data/market-open",
                                 "nepse_index_url"      : f"{self.base_url}/api/nots/nepse-index",
                                 "nepse_subindices_url" : f"{self.base_url}/api/nots",
@@ -313,9 +315,13 @@ class Nepse:
     def getSummary(self):
         return self.requestAPI(url=self.api_end_points['summary_url'])
     
-    def getTopTenScrips(self):
-        return self.requestAPI(url=self.api_end_points['top_ten_scrips_url'])
-    
+    def getTopTenTradeScrips(self):
+        return self.requestAPI(url=self.api_end_points['top_ten_trade_url'])
+    def getTopTenTransactionScrips(self):
+        return self.requestAPI(url=self.api_end_points['top_ten_transaction_url'])
+    def getTopTenTurnoverScrips(self):
+        return self.requestAPI(url=self.api_end_points['top_ten_turnover_url'])
+      
     def getSupplyDemand(self):
         return self.requestAPI(url=self.api_end_points['supply_demand_url'])
     
