@@ -120,6 +120,7 @@ class Nepse:
         self.post_payload_id      = None
 
         self.company_symbol_id_keymap = None
+        self.company_list = None
         
         self.floor_sheet_size = 500
         
@@ -340,8 +341,10 @@ class Nepse:
     def getNepseSubIndices(self):
         return self.requestAPI(url=self.api_end_points['nepse_subindices_url'])
     
-    def getCompanyList(self):
-        return self.requestAPI(url=self.api_end_points['company_list_url'])
+    def getCompanyList(self, force=False):
+        if self.company_list is None or force == True:
+            self.company_list = self.requestAPI(url=self.api_end_points['company_list_url'])
+        return self.company_list
     
     def getCompanyIDKeyMap(self):
         if self.company_symbol_id_keymap is None:
