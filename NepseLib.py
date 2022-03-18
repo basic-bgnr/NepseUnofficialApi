@@ -118,7 +118,6 @@ class Nepse:
         self.refresh_url          = f"{self.base_url}/api/authenticate/refresh-token"
 
         self.post_payload_id      = None
-
         self.company_symbol_id_keymap = None
         self.company_list = None
         
@@ -290,15 +289,13 @@ class Nepse:
             731, 852, 384, 565, 596, 451, 772, 624, 691,
           ]
     
-    def _getPOSTPayloadID(self):
+    def getPOSTPayloadID(self):
         if self.post_payload_id is None:
             dummy_id = self.getDummyID()
             self.post_payload_id = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
         
         return self.post_payload_id
     
-    def getPOSTPayloadID(self):
-        return self._getPOSTPayloadID()
     
     ###############################################PUBLIC METHODS###############################################
     def getMarketStatus(self):
