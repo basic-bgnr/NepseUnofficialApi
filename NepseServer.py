@@ -39,14 +39,36 @@ def getIndex():
 
 @app.route(routes["Summary"])
 def getSummary():
+    response = flask.jsonify(_getSummary())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+def _getSummary():
     response = dict()
     for obj in nepse.getSummary():
         response[obj['detail']] = obj['value']
-
-    response = flask.jsonify(response)
-    response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+@app.route(routes["NepseIndex"])
+def getNepseIndex():
+    response = flask.jsonify(_getNepseIndex)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+def _getNepseIndex():
+    response = dict()
+    for obj in nepse.getNepseIndex():
+        response[obj['index']] = obj
+    return response
+    
+@app.route(routes["NepseSubIndices"])
+def getNepseSubIndices():
+    response = flask.jsonify(_getNepseSubIndices())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+def _getNepseSubIndices():
+    response = dict()
+    for obj in nepse.getNepseSubIndices():
+        response[obj['index']] = obj
+    return response
 
 @app.route(routes["TopTenTradeScrips"])
 def getTopTenTradeScrips():
@@ -97,18 +119,6 @@ def isNepseOpen():
     return response
 
 
-@app.route(routes["NepseIndex"])
-def getNepseIndex():
-    response = flask.jsonify(nepse.getNepseIndex())
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
-
-
-@app.route(routes["NepseSubIndices"])
-def getNepseSubIndices():
-    response = flask.jsonify(nepse.getNepseSubIndices())
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response
 
 
 @app.route(routes["DailyNepseIndexGraph"])
@@ -145,14 +155,54 @@ def getPriceVolume():
                    for obj in nepse.getTopTenTransactionScrips()}
     price_vol_info = nepse.getPriceVolume()
 
-    response = dict()
+    sector_sub_indices = _getNepseSubIndices()
+    #this is done since nepse sub indices and sector name are different 
+    sector_mapper = {
+        "Commercial Banks": "Banking SubIndex",
+        "Development Banks": "Development Bank Index",
+        "Finance": "Finance Index",
+        "Hotels And Tourism": "Hotels And Tourism Index",
+        "Hydro Power": "HydroPower Index",
+        "Investment": "Investment Index",
+        "Life Insurance": "Life Insurance",
+        "Manufacturing And Processing": "Manufacturing And Processing",
+        "Microfinance": "Microfinance Index",
+        "Mutual Fund": "Mutual Fund",
+        "Non Life Insurance": "Non Life Insurance",
+        "Others": "Others Index",
+        "Tradings": "Trading Index"
+    }
+
+
+
+    scrips_details = dict()
     for obj in price_vol_info:
         obj['sectorName'] = companies[obj['symbol']]
         obj['totalTurnover'] = turnover[obj['symbol']]
         obj['totalTrades'] = transaction[obj['symbol']]
+        obj['pointsChange'] = obj['percentageChange']/100 * obj['previousClose'] 
+        scrips_details[obj['symbol']] = obj
+    
+    sector_details = dict()
+    for sector in set(companies.values()):
 
-        response[obj['symbol']] = obj
+        total_trades, total_trade_quantity, total_turnover = 0, 0, 0
+        for scrip_details in scrips_details.values():
 
-    response = flask.jsonify(response)
+            if scrip_details['sectorName'] == sector:
+                total_trades += scrip_details['totalTrades']
+                total_trade_quantity += scrip_details['totalTradeQuantity']
+                total_turnover += scrip_details['totalTurnover']
+
+        sector_details[sector] = {'totalTrades': total_trades, 
+                                  'totalTradeQuantity':total_trade_quantity, 
+                                  'totalTurnover': total_turnover,
+                                  'index': sector_sub_indices[sector_mapper[sector]],
+                                  'sectorName': sector}
+
+
+    response = flask.jsonify({'scripsDetails': scrips_details,
+                              'sectorsDetails': sector_details})
+
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
