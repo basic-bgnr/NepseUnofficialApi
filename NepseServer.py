@@ -50,7 +50,7 @@ def _getSummary():
 
 @app.route(routes["NepseIndex"])
 def getNepseIndex():
-    response = flask.jsonify(_getNepseIndex)
+    response = flask.jsonify(_getNepseIndex())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 def _getNepseIndex():
