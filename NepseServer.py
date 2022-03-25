@@ -27,6 +27,8 @@ routes = {
 
     'DailyScripPriceGraph': '/DailyScripPriceGraph',
     'CompanyList': '/CompanyList',
+
+    'TradeTurnoverTransactionSubindices': '/TradeTurnoverTransactionSubindices',
 }
 
 
@@ -42,33 +44,42 @@ def getSummary():
     response = flask.jsonify(_getSummary())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
 def _getSummary():
     response = dict()
     for obj in nepse.getSummary():
         response[obj['detail']] = obj['value']
     return response
 
+
 @app.route(routes["NepseIndex"])
 def getNepseIndex():
     response = flask.jsonify(_getNepseIndex())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
 def _getNepseIndex():
     response = dict()
     for obj in nepse.getNepseIndex():
         response[obj['index']] = obj
     return response
-    
+
+
 @app.route(routes["NepseSubIndices"])
 def getNepseSubIndices():
     response = flask.jsonify(_getNepseSubIndices())
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
 def _getNepseSubIndices():
     response = dict()
     for obj in nepse.getNepseSubIndices():
         response[obj['index']] = obj
     return response
+
 
 @app.route(routes["TopTenTradeScrips"])
 def getTopTenTradeScrips():
@@ -119,8 +130,6 @@ def isNepseOpen():
     return response
 
 
-
-
 @app.route(routes["DailyNepseIndexGraph"])
 def getDailyNepseIndexGraph():
     response = flask.jsonify(nepse.getDailyNepseIndexGraph())
@@ -147,16 +156,33 @@ def getCompanyList():
 
 @app.route(routes["PriceVolume"])
 def getPriceVolume():
-    companies = {company['symbol']: company['sectorName']
+    response = flask.jsonify(nepse.getPriceVolume())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route(routes["TradeTurnoverTransactionSubindices"])
+def getTradeTurnoverTransactionSubindices():
+
+    companies = {company['symbol']: company
                  for company in nepse.getCompanyList()}
-    turnover = {obj['symbol']: obj['turnover']
+    turnover = {obj['symbol']: obj
                 for obj in nepse.getTopTenTurnoverScrips()}
-    transaction = {obj['symbol']: obj['totalTrades']
+    transaction = {obj['symbol']: obj
                    for obj in nepse.getTopTenTransactionScrips()}
-    price_vol_info = nepse.getPriceVolume()
+    trade = {obj['symbol']: obj
+             for obj in nepse.getTopTenTradeScrips()}
+
+    gainers = {obj['symbol']: obj
+               for obj in nepse.getTopGainers()}
+    losers = {obj['symbol']: obj
+              for obj in nepse.getTopLosers()}
+
+    price_vol_info = {obj['symbol']: obj
+                      for obj in nepse.getPriceVolume()}
 
     sector_sub_indices = _getNepseSubIndices()
-    #this is done since nepse sub indices and sector name are different 
+    # this is done since nepse sub indices and sector name are different
     sector_mapper = {
         "Commercial Banks": "Banking SubIndex",
         "Development Banks": "Development Bank Index",
@@ -173,18 +199,48 @@ def getPriceVolume():
         "Tradings": "Trading Index"
     }
 
-
-
     scrips_details = dict()
-    for obj in price_vol_info:
-        obj['sectorName'] = companies[obj['symbol']]
-        obj['totalTurnover'] = turnover[obj['symbol']]
-        obj['totalTrades'] = transaction[obj['symbol']]
-        obj['pointsChange'] = obj['percentageChange']/100 * obj['previousClose'] 
-        scrips_details[obj['symbol']] = obj
-    
+    for symbol, company in companies.items():
+        company_details = {}
+
+        company_details['symbol'] = symbol
+        company_details['sectorName'] = company['sectorName']
+        company_details['totalTurnover'] = turnover[symbol]['turnover'] if symbol in turnover.keys(
+        ) else 0
+        company_details['totalTrades'] = transaction[symbol]['totalTrades'] if symbol in transaction.keys(
+        ) else 0
+        company_details['totalTradeQuantity'] = trade[symbol]['shareTraded'] if symbol in transaction.keys(
+        ) else 0
+
+        if symbol in gainers.keys():
+            company_details['pointChange'], company_details['percentageChange'], company_details['ltp'] = (gainers[symbol]['pointChange'],
+            gainers[symbol]['percentageChange'],
+            gainers[symbol]['ltp'])
+        elif symbol in losers.keys():
+            company_details['pointChange'], company_details['percentageChange'], company_details['ltp'] = (losers[symbol]['pointChange'],
+            losers[symbol]['percentageChange'],
+            losers[symbol]['ltp'])
+        else:
+            company_details['pointChange'], company_details['percentageChange'], company_details['ltp'] = 0, 0, 0
+
+        if symbol in price_vol_info.keys():
+            company_details['highPrice'] = price_vol_info[symbol]['highPrice']
+            company_details['lowPrice'] = price_vol_info[symbol]['lowPrice']
+            company_details['openPrice'] = price_vol_info[symbol]['openPrice']
+            company_details['previousClosePrice'] = price_vol_info[symbol]['previousClose']
+            company_details['ltp'] = price_vol_info[symbol]['lastTradedPrice']
+        else:
+            company_details['highPrice'] = 0
+            company_details['lowPrice'] = 0
+            company_details['openPrice'] = 0
+            company_details['previousClosePrice'] = 0
+
+        scrips_details[symbol] = company_details
+
     sector_details = dict()
-    for sector in set(companies.values()):
+    sectors = {company['sectorName']
+               for company in companies.values()}
+    for sector in sectors:
 
         total_trades, total_trade_quantity, total_turnover = 0, 0, 0
         for scrip_details in scrips_details.values():
@@ -194,12 +250,11 @@ def getPriceVolume():
                 total_trade_quantity += scrip_details['totalTradeQuantity']
                 total_turnover += scrip_details['totalTurnover']
 
-        sector_details[sector] = {'totalTrades': total_trades, 
-                                  'totalTradeQuantity':total_trade_quantity, 
+        sector_details[sector] = {'totalTrades': total_trades,
+                                  'totalTradeQuantity': total_trade_quantity,
                                   'totalTurnover': total_turnover,
                                   'index': sector_sub_indices[sector_mapper[sector]],
                                   'sectorName': sector}
-
 
     response = flask.jsonify({'scripsDetails': scrips_details,
                               'sectorsDetails': sector_details})

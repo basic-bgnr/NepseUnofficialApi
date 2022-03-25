@@ -172,11 +172,11 @@ class Nepse:
                                 "todays_price"         : f"{self.base_url}/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06",
                               }
         
-        self.api_end_point_access_token = defaultdict(lambda : False)
+        self.api_end_point_access_token = (False, False)
         
         self.headers= {
                             #host doesn't work with https prefix so removing it
-                            'Host': f'{self.base_url[self.base_url.index("w"):]}',
+                            'Host': self.base_url.replace('https://', ''),
                             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0',
                             'Accept': 'application/json, text/plain, */*',
                             'Accept-Language': 'en-US,en;q=0.5',
@@ -194,13 +194,12 @@ class Nepse:
         
         headers = self.headers
         if url in self.api_end_points.values(): # this is done so that get request to api/authenticate doesnt fail, since it doesnt require authorization headers
-            access_token, request_token = self.getTokenForURL(url)
+            access_token, request_token = self.getToken()
             headers = {'Authorization': f'Salter {access_token}', **self.headers}
-        
         
         response = requests.get(url, headers=headers)
         if (response.status_code != 200):
-            self.refreshTokenForURL(url)
+            self.refreshToken()
             return self.requestAPI(url) 
         
         return response.json()
@@ -209,51 +208,54 @@ class Nepse:
         self.incrementTotalRequestCount()
         
         
-        access_token, request_token = self.getTokenForURL(url)
+        access_token, request_token = self.getToken()
         
         headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
         response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadID()}))
         
         if (response.status_code != 200):
-            self.refreshTokenForURL(url)
+            self.refreshToken()
             return self.requestPOSTAPI(url)
         
         return response.json()
             
     
-    #token is unique for each url, when token is requested, the access token received when first used for accessing a url can be 
-    #used to send multiple request for the same url without requesting new access token.
-    def getTokenForURL(self, url):
-        if self.api_end_point_access_token[url] is False:
+    #token is not unique for each url, when token is requested,
+    def getToken(self):
+        if self.api_end_point_access_token == (False, False):
             token_response = self.getValidToken()
-            self.api_end_point_access_token[url] = token_response
+            self.api_end_point_access_token = token_response
+            
         
-        return self.api_end_point_access_token[url]
+        return self.api_end_point_access_token
     
-    def refreshTokenForURL(self, url):
-        print(f'token refresh: {url}')
-        
-        access_token, refresh_token = self.api_end_point_access_token[url]
+    def refreshToken(self):
+        print('refresh token')
+        access_token, refresh_token = self.api_end_point_access_token
+        if (access_token != False):# this is done to make first request to api/authenticate pass
 
-        data=json.dumps({'refreshToken':refresh_token})
+            data=json.dumps({'refreshToken':refresh_token})
 
-        headers= {**self.headers, 
-                    "Content-Type": "application/json",
-                    "Content-Length": str(len(data)),
-                    "Authorization": f"Salter {access_token}"
-                 }
-        
-        refresh_key = requests.post(self.refresh_url, 
-                                    headers=headers, 
-                                    data=data)
-        
-        if refresh_key.status_code != 200:
-            self.resetTokenForURL(url)
+            headers= {**self.headers, 
+                        "Content-Type": "application/json",
+                        "Content-Length": str(len(data)),
+                        "Authorization": f"Salter {access_token}"
+                    }
+            
+            refresh_key = requests.post(self.refresh_url, 
+                                        headers=headers, 
+                                        data=data)
+            
+            if refresh_key.status_code != 200:
+                self.resetToken()
+            else:
+                self.api_end_point_access_token = self.getValidTokenFromJSON( refresh_key.json() )
         else:
-            self.api_end_point_access_token[url] = self.getValidTokenFromJSON( refresh_key.json() )
+            self.getToken()
+
         
-    def resetTokenForURL(self, url):
-        self.api_end_point_access_token[url] = False
+    def resetToken(self):
+        self.api_end_point_access_token = (False, False)
         
 #         self.api_end_point_access_token[url] = False
     def getValidTokenFromJSON(self, token_response):
@@ -429,10 +431,10 @@ class Nepse:
 
 def test():
     a = Nepse()
-    # a.getFloorSheet(show_progress=True)
+    a.getFloorSheet(show_progress=True)
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
-    print(a.getDailyNepseIndexGraph())
+    # print(a.getDailyNepseIndexGraph())
 
 if __name__ == '__main__':
     test()
