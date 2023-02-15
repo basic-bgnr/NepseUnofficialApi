@@ -4,102 +4,33 @@ from json import JSONDecodeError
 import json
 import time
 from datetime import date
+import pywasm
 import tqdm 
 
 class TokenParser():
     def __init__(self):
-        ###############################################MAGIC ARRAY###############################################
-        #FOR details check http://newweb.nepalstock.com/assets/prod/css.wasm
-        #decompiling the wasm gives access to the following magic array and (rdx, cdx) function
-        self.data_segment_data_0 = [
-                                      0x09, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 
-                                      0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 
-                                      0x02, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 
-                                      0x07, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 
-                                      0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 
-                                      0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 
-                                      0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 
-                                      0x09, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 
-                                      0x06, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 
-                                      0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 
-                                      0x09, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 
-                                      0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 
-                                      0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 
-                                      0x04, 
-                                    ]
-        
-    def rdx(self, w2c_p0, w2c_p1, w2c_p2, w2c_p3, w2c_p4):
-
-        w2c_i0 = w2c_p1
-        w2c_i1 = 100
-        w2c_i0 = w2c_i0 // w2c_i1
-        w2c_i1 = 10
-        w2c_i0 = w2c_i0 % w2c_i1
-        w2c_i1 = w2c_p1
-        w2c_i2 = 10
-        w2c_i1 = w2c_i1 // w2c_i2
-        w2c_p0 = w2c_i1
-        w2c_i2 = 10
-        w2c_i1 = w2c_i1 % w2c_i2
-        w2c_i0 += w2c_i1
-        w2c_p2 = w2c_i0
-        w2c_i1 = w2c_p2
-        w2c_i2 = w2c_p1
-        w2c_i3 = w2c_p0
-        w2c_i4 = 10
-        w2c_i3 *= w2c_i4
-        w2c_i2 -= w2c_i3
-        w2c_i1 += w2c_i2
-        w2c_i2 = 2
-        w2c_i1 <<= (w2c_i2 & 31)
-
-        w2c_i1 = self.data_segment_data_0[w2c_i1]
-        w2c_i0 += w2c_i1
-        w2c_i1 = 22
-        w2c_i0 += w2c_i1
-        return w2c_i0
-
-
-    def cdx(self, w2c_p0, w2c_p1, w2c_p2, w2c_p3, w2c_p4):
-        w2c_i0 = w2c_p1
-        w2c_i1 = 10
-        w2c_i0 = w2c_i0 // w2c_i1
-        w2c_p0 = w2c_i0
-        w2c_i1 = 10
-        w2c_i0 = w2c_i0 % w2c_i1
-        w2c_i1 = w2c_p1
-        w2c_i2 = w2c_p0
-        w2c_i3 = 10
-        w2c_i2 *= w2c_i3
-        w2c_i1 -= w2c_i2
-        w2c_i0 += w2c_i1
-        w2c_i1 = w2c_p1
-        w2c_i2 = 100
-        w2c_i1 = w2c_i1 // w2c_i2
-        w2c_i2 = 10
-        w2c_i1 = w2c_i1 % w2c_i2
-        w2c_i0 += w2c_i1
-        w2c_i1 = 2
-        w2c_i0 <<= (w2c_i1 & 31)
-
-        w2c_i0 = self.data_segment_data_0[w2c_i0]
-        w2c_i1 = 22
-        w2c_i0 += w2c_i1
-
-        return w2c_i0
+        self.runtime = pywasm.load('css.wasm')
 
     def parse_token_response(self, token_response):
-        n = self.cdx(token_response['salt1'], token_response['salt2'], token_response['salt3'], token_response['salt4'], token_response['salt5']);
-        l = self.rdx(token_response['salt1'], token_response['salt2'], token_response['salt4'], token_response['salt3'], token_response['salt5']);
-        
-        i = self.cdx(token_response['salt2'], token_response['salt1'], token_response['salt3'], token_response['salt5'], token_response['salt4']);
-        r = self.rdx(token_response['salt2'], token_response['salt1'], token_response['salt3'], token_response['salt4'], token_response['salt5']);
+        n = self.runtime.exec('cdx', [token_response['salt1'], token_response['salt2'], token_response['salt3'], token_response['salt4'], token_response['salt5']]);
+        l = self.runtime.exec('rdx', [token_response['salt1'], token_response['salt2'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+        o = self.runtime.exec('bdx', [token_response['salt1'], token_response['salt2'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+        p = self.runtime.exec('ndx', [token_response['salt1'], token_response['salt2'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+        q = self.runtime.exec('mdx', [token_response['salt1'], token_response['salt2'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+
+
+        a = self.runtime.exec('cdx', [token_response['salt2'], token_response['salt1'], token_response['salt3'], token_response['salt5'], token_response['salt4']]);
+        b = self.runtime.exec('rdx', [token_response['salt2'], token_response['salt1'], token_response['salt3'], token_response['salt4'], token_response['salt5']]);
+        c = self.runtime.exec('bdx', [token_response['salt2'], token_response['salt1'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+        d = self.runtime.exec('ndx', [token_response['salt2'], token_response['salt1'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+        e = self.runtime.exec('mdx', [token_response['salt2'], token_response['salt1'], token_response['salt4'], token_response['salt3'], token_response['salt5']]);
+
 
         access_token  = token_response['accessToken']
         refresh_token = token_response['refreshToken']
         
-        parsed_access_token  = access_token[0:n] + access_token[n + 1: l] + access_token[l + 1:]
-        parsed_refresh_token = refresh_token[0:i] + refresh_token[i + 1: r] + refresh_token[r + 1:]
+        parsed_access_token  = access_token[0:n] + access_token[n + 1: l] + access_token[l + 1: o] + access_token[o + 1: p] + access_token[p + 1:q] + access_token[q + 1:]
+        parsed_refresh_token = refresh_token[0:a] + refresh_token[a + 1: b] + refresh_token[b + 1: c] + refresh_token[c + 1: d] + refresh_token[d + 1: e ] + refresh_token[e + 1: ]
     
         #returns both access_token and refresh_token, i don't know what's the purpose of refresh token.
         #Right now new access_token can be used for every new api request
@@ -431,10 +362,11 @@ class Nepse:
 
 def test():
     a = Nepse()
-    a.getFloorSheet(show_progress=True)
+    #a.getFloorSheet(show_progress=True)
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
     # print(a.getDailyNepseIndexGraph())
+    print(a.getPriceVolume())
 
 if __name__ == '__main__':
     test()
