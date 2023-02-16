@@ -30,8 +30,8 @@ class TokenParser():
         refresh_token = token_response['refreshToken']
 
 
-        print(f"refresh token index {a}, {b}, {c}, {d}, {e}")
-        print(f"access token index {n}, {l}, {o}, {p}, {q}")
+        print(f"refresh token index {a}, {b}, {c}, {d}, {e}", refresh_token)
+        print(f"access token index {n}, {l}, {o}, {p}, {q}", access_token)
         
         parsed_access_token  = access_token[0:n] + access_token[n + 1: l] + access_token[l + 1: o] + access_token[o + 1: p] + access_token[p + 1:q] + access_token[q + 1:]
         parsed_refresh_token = refresh_token[0:a] + refresh_token[a + 1: b] + refresh_token[b + 1: c] + refresh_token[c + 1: d] + refresh_token[d + 1: e ] + refresh_token[e + 1: ]
@@ -140,13 +140,14 @@ class Nepse:
         return response.json()
     
     def requestPOSTAPI(self, url):
+        print('url ######: ', url)
         self.incrementTotalRequestCount()
         
         
         access_token, request_token = self.getToken()
         
         headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
-        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadID()}))
+        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else self.getPOSTPayloadID()}))
         
         if (response.status_code != 200):
             self.refreshToken()
@@ -229,15 +230,22 @@ class Nepse:
             631, 192, 734, 445, 192, 883, 187, 122, 591, 731, 852, 384,
             565, 596, 451, 772, 624, 691 ]
     
-    def getPOSTPayloadID(self):
-        if self.post_payload_id is None:
-            dummy_id = self.getDummyID()
-            e = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
-            n = e + self.salts[ 3 if e % 10 < 5 else 1] * date.today().day - self.salts[ (3 if e%10 < 5 else 1) - 1];
-            self.post_payload_id = n 
+    def getPOSTPayloadIDForNepseIndex(self):
+        print('post paylod nepse index called')
+        dummy_id = self.getDummyID()
+        e = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+        n = e + self.salts[ 3 if e % 10 < 5 else 1] * date.today().day - self.salts[ (3 if e%10 < 5 else 1) - 1];
+        self.post_payload_id = n 
 
         print('post payload id ', self.post_payload_id)
         
+        return self.post_payload_id
+
+    def getPOSTPayloadID(self):
+        print('post payload for other called')
+        dummy_id = self.getDummyID()
+        self.post_payload_id = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+
         return self.post_payload_id
     
     
