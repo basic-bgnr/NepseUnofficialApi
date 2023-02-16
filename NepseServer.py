@@ -223,17 +223,18 @@ def getTradeTurnoverTransactionSubindices():
         else:
             company_details['pointChange'], company_details['percentageChange'], company_details['ltp'] = 0, 0, 0
 
-        if symbol in price_vol_info.keys():
-            company_details['highPrice'] = price_vol_info[symbol]['highPrice']
-            company_details['lowPrice'] = price_vol_info[symbol]['lowPrice']
-            company_details['openPrice'] = price_vol_info[symbol]['openPrice']
-            company_details['previousClosePrice'] = price_vol_info[symbol]['previousClose']
-            company_details['ltp'] = price_vol_info[symbol]['lastTradedPrice']
-        else:
-            company_details['highPrice'] = 0
-            company_details['lowPrice'] = 0
-            company_details['openPrice'] = 0
-            company_details['previousClosePrice'] = 0
+
+        #if symbol in price_vol_info.keys():
+        #    company_details['highPrice'] = price_vol_info[symbol]['highPrice']
+        #    company_details['lowPrice'] = price_vol_info[symbol]['lowPrice']
+        #    company_details['openPrice'] = price_vol_info[symbol]['openPrice']
+        #    company_details['previousClosePrice'] = price_vol_info[symbol]['previousClose']
+        #    company_details['ltp'] = price_vol_info[symbol]['lastTradedPrice']
+        #else:
+        #    company_details['highPrice'] = 0
+        #    company_details['lowPrice'] = 0
+        #    company_details['openPrice'] = 0
+        #    company_details['previousClosePrice'] = 0
 
         scrips_details[symbol] = company_details
 

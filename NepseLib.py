@@ -28,6 +28,10 @@ class TokenParser():
 
         access_token  = token_response['accessToken']
         refresh_token = token_response['refreshToken']
+
+
+        print(f"refresh token index {a}, {b}, {c}, {d}, {e}")
+        print(f"access token index {n}, {l}, {o}, {p}, {q}")
         
         parsed_access_token  = access_token[0:n] + access_token[n + 1: l] + access_token[l + 1: o] + access_token[o + 1: p] + access_token[p + 1:q] + access_token[q + 1:]
         parsed_refresh_token = refresh_token[0:a] + refresh_token[a + 1: b] + refresh_token[b + 1: c] + refresh_token[c + 1: d] + refresh_token[d + 1: e ] + refresh_token[e + 1: ]
@@ -190,8 +194,11 @@ class Nepse:
         
 #         self.api_end_point_access_token[url] = False
     def getValidTokenFromJSON(self, token_response):
+        self.salts = []
         for salt_index in range(1, 6):
-            token_response[f'salt{salt_index}'] = int(token_response[f'salt{salt_index}'])
+            val = int(token_response[f'salt{salt_index}'])
+            token_response[f'salt{salt_index}'] = val
+            self.salts.append(val)
         
         #returns access_token only, refresh token is not used right now
         return self.token_parser.parse_token_response(token_response)
@@ -212,20 +219,24 @@ class Nepse:
         return self.getMarketStatus()['id']
     
     def getDummyData(self):
-        return [147, 117, 239, 143, 157, 312, 161, 612, 512, 804, 411, 527, 170,
-            511, 421, 667, 764, 621, 301, 106, 133, 793, 411, 511, 312, 423,
-            344, 346, 653, 758, 342, 222, 236, 811, 711, 611, 122, 447, 128,
-            199, 183, 135, 489, 703, 800, 745, 152, 863, 134, 211, 142, 564,
-            375, 793, 212, 153, 138, 153, 648, 611, 151, 649, 318, 143, 117,
-            756, 119, 141, 717, 113, 112, 146, 162, 660, 693, 261, 362, 354,
-            251, 641, 157, 178, 631, 192, 734, 445, 192, 883, 187, 122, 591,
-            731, 852, 384, 565, 596, 451, 772, 624, 691,
-          ]
+        return [ 147, 117, 239, 143, 157, 312, 161, 612, 512, 804,
+            411, 527, 170, 511, 421, 667, 764, 621, 301, 106, 133, 793,
+            411, 511, 312, 423, 344, 346, 653, 758, 342, 222, 236, 811,
+            711, 611, 122, 447, 128, 199, 183, 135, 489, 703, 800, 745,
+            152, 863, 134, 211, 142, 564, 375, 793, 212, 153, 138, 153,
+            648, 611, 151, 649, 318, 143, 117, 756, 119, 141, 717, 113,
+            112, 146, 162, 660, 693, 261, 362, 354, 251, 641, 157, 178,
+            631, 192, 734, 445, 192, 883, 187, 122, 591, 731, 852, 384,
+            565, 596, 451, 772, 624, 691 ]
     
     def getPOSTPayloadID(self):
         if self.post_payload_id is None:
             dummy_id = self.getDummyID()
-            self.post_payload_id = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+            e = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+            n = e + self.salts[ 3 if e % 10 < 5 else 1] * date.today().day - self.salts[ (3 if e%10 < 5 else 1) - 1];
+            self.post_payload_id = n 
+
+        print('post payload id ', self.post_payload_id)
         
         return self.post_payload_id
     
@@ -366,7 +377,8 @@ def test():
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
     # print(a.getDailyNepseIndexGraph())
-    print(a.getPriceVolume())
+    # print(a.getPriceVolume())
+    print(a.getMarketStatus())
 
 if __name__ == '__main__':
     test()
