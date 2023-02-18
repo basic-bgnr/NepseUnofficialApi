@@ -149,8 +149,10 @@ class Nepse:
         headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
         response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else self.getPOSTPayloadID()}))
         
+        print('post response: ', response.text)
         if (response.status_code != 200):
-            self.refreshToken()
+            #self.refreshToken()
+            self.resetToken()
             return self.requestPOSTAPI(url)
         
         return response.json()
@@ -192,6 +194,7 @@ class Nepse:
         
     def resetToken(self):
         self.api_end_point_access_token = (False, False)
+        self.salts  = []
         
 #         self.api_end_point_access_token[url] = False
     def getValidTokenFromJSON(self, token_response):
