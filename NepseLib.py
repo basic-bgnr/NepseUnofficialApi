@@ -147,7 +147,7 @@ class Nepse:
         access_token, request_token = self.getToken()
         
         headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
-        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else self.getPOSTPayloadID()}))
+        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else (self.getPOSTPayloadIDForFloorSheet() if url.startswith(self.api_end_points['floor_sheet']) else self.getPOSTPayloadID())}))
         
         print('post response: ', response.text)
         if (response.status_code != 200):
@@ -238,6 +238,17 @@ class Nepse:
         dummy_id = self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
         n = e + self.salts[ 3 if e % 10 < 5 else 1] * date.today().day - self.salts[ (3 if e%10 < 5 else 1) - 1];
+        self.post_payload_id = n 
+
+        print('post payload id ', self.post_payload_id)
+        
+        return self.post_payload_id
+
+    def getPOSTPayloadIDForFloorSheet(self):
+        print('post payload id for floorsheet called')
+        dummy_id = self.getDummyID()
+        e = self.getDummyData()[dummy_id] + dummy_id + 2*(date.today().day)
+        n = e + self.salts[1  if e%10 < 4 else 3] * date.today().day - self.salts[(1 if e%10<4 else 3) - 1]
         self.post_payload_id = n 
 
         print('post payload id ', self.post_payload_id)
@@ -384,7 +395,7 @@ class Nepse:
 
 def test():
     a = Nepse()
-    #a.getFloorSheet(show_progress=True)
+    a.getFloorSheet(show_progress=True)
     # print(a.getFloorSheetOf(symbol="MLBBL"))
     # print(a.getValidToken())
     # print(a.getDailyNepseIndexGraph())
