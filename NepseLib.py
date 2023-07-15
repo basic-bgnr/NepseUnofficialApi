@@ -132,7 +132,7 @@ class Nepse:
             access_token, request_token = self.getToken()
             headers = {'Authorization': f'Salter {access_token}', **self.headers}
         
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, verify=False)
         if (response.status_code != 200):
             self.refreshToken()
             return self.requestAPI(url) 
@@ -147,7 +147,7 @@ class Nepse:
         access_token, request_token = self.getToken()
         
         headers = {'Content-Type':'application/json', 'Authorization': f'Salter {access_token}', **self.headers, }
-        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else (self.getPOSTPayloadIDForFloorSheet() if url.startswith(self.api_end_points['floor_sheet']) else self.getPOSTPayloadID())}))
+        response = requests.post(url, headers=headers, data=json.dumps({"id": self.getPOSTPayloadIDForNepseIndex() if url == self.api_end_points['nepse_index_daily_graph'] else (self.getPOSTPayloadIDForFloorSheet() if url.startswith(self.api_end_points['floor_sheet']) else self.getPOSTPayloadID())}), verify=False)
         
         print('post response: ', response.text)
         if (response.status_code != 200):
@@ -182,7 +182,8 @@ class Nepse:
             
             refresh_key = requests.post(self.refresh_url, 
                                         headers=headers, 
-                                        data=data)
+                                        data=data, 
+                                        verify=False)
             
             if refresh_key.status_code != 200:
                 self.resetToken()
