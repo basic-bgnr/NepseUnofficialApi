@@ -4,4 +4,4 @@ export FLASK_APP=NepseServer
 export FLASK_ENV=development
 export FLASK_RUN_PORT=8000
 firefox file:///home/bidit/Desktop/programming/vue/module1/index.html &
-flask run --with-threads
+flask run --with-threads --host=0.0.0.0
