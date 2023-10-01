@@ -1,166 +1,22 @@
-import requests
-from collections import defaultdict
-from json import JSONDecodeError
-import json
-import time
+from TokenUtils import TokenManager
 from datetime import date
-import pywasm
-import tqdm
-
-
-class TokenParser:
-    def __init__(self):
-        self.runtime = pywasm.load("css.wasm")
-
-    def parse_token_response(self, token_response):
-        n = self.runtime.exec(
-            "cdx",
-            [
-                token_response["salt1"],
-                token_response["salt2"],
-                token_response["salt3"],
-                token_response["salt4"],
-                token_response["salt5"],
-            ],
-        )
-        l = self.runtime.exec(
-            "rdx",
-            [
-                token_response["salt1"],
-                token_response["salt2"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-        o = self.runtime.exec(
-            "bdx",
-            [
-                token_response["salt1"],
-                token_response["salt2"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-        p = self.runtime.exec(
-            "ndx",
-            [
-                token_response["salt1"],
-                token_response["salt2"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-        q = self.runtime.exec(
-            "mdx",
-            [
-                token_response["salt1"],
-                token_response["salt2"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-
-        a = self.runtime.exec(
-            "cdx",
-            [
-                token_response["salt2"],
-                token_response["salt1"],
-                token_response["salt3"],
-                token_response["salt5"],
-                token_response["salt4"],
-            ],
-        )
-        b = self.runtime.exec(
-            "rdx",
-            [
-                token_response["salt2"],
-                token_response["salt1"],
-                token_response["salt3"],
-                token_response["salt4"],
-                token_response["salt5"],
-            ],
-        )
-        c = self.runtime.exec(
-            "bdx",
-            [
-                token_response["salt2"],
-                token_response["salt1"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-        d = self.runtime.exec(
-            "ndx",
-            [
-                token_response["salt2"],
-                token_response["salt1"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-        e = self.runtime.exec(
-            "mdx",
-            [
-                token_response["salt2"],
-                token_response["salt1"],
-                token_response["salt4"],
-                token_response["salt3"],
-                token_response["salt5"],
-            ],
-        )
-
-        access_token = token_response["accessToken"]
-        refresh_token = token_response["refreshToken"]
-
-        print(f"refresh token index {a}, {b}, {c}, {d}, {e}", refresh_token)
-        print(f"access token index {n}, {l}, {o}, {p}, {q}", access_token)
-
-        parsed_access_token = (
-            access_token[0:n]
-            + access_token[n + 1 : l]
-            + access_token[l + 1 : o]
-            + access_token[o + 1 : p]
-            + access_token[p + 1 : q]
-            + access_token[q + 1 :]
-        )
-        parsed_refresh_token = (
-            refresh_token[0:a]
-            + refresh_token[a + 1 : b]
-            + refresh_token[b + 1 : c]
-            + refresh_token[c + 1 : d]
-            + refresh_token[d + 1 : e]
-            + refresh_token[e + 1 :]
-        )
-
-        # returns both access_token and refresh_token, i don't know what's the purpose of refresh token.
-        # Right now new access_token can be used for every new api request
-        return (parsed_access_token, parsed_refresh_token)
+import json
+import requests
 
 
 class Nepse:
     def __init__(self):
-        self.token_request_count = 0
-        self.total_request_count = 0
+        # internal flag to set tls verification true or false during http request
+        self._tls_verify = True
 
-        self.token_parser = TokenParser()
+        self.token_manager = TokenManager()
 
-        self.base_url = "https://www.nepalstock.com.np"
-
-        self.token_url = f"{self.base_url}/api/authenticate/prove"
-        self.refresh_url = f"{self.base_url}/api/authenticate/refresh-token"
-
-        self.post_payload_id = None
         self.company_symbol_id_keymap = None
         self.company_list = None
 
         self.floor_sheet_size = 500
 
+        self.base_url = "https://www.nepalstock.com.np"
         self.api_end_points = {
             "price_volume_url": f"{self.base_url}/api/nots/securityDailyTradeStat/58",
             "summary_url": f"{self.base_url}/api/nots/market-summary/",
@@ -204,8 +60,6 @@ class Nepse:
             "todays_price": f"{self.base_url}/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06",
         }
 
-        self.api_end_point_access_token = (False, False)
-
         self.headers = {
             # host doesn't work with https prefix so removing it
             "Host": self.base_url.replace("https://", ""),
@@ -223,27 +77,21 @@ class Nepse:
     ###############################################PRIVATE METHODS###############################################
 
     def requestAPI(self, url):
-        self.incrementTotalRequestCount()
-
         headers = self.headers
-        if (
-            url in self.api_end_points.values()
-        ):  # this is done so that get request to api/authenticate doesnt fail, since it doesnt require authorization headers
-            access_token, request_token = self.getToken()
-            headers = {"Authorization": f"Salter {access_token}", **self.headers}
+        access_token = self.token_manager.getAccessToken()
 
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            self.refreshToken()
-            return self.requestAPI(url)
+        headers = {
+            "Authorization": f"Salter {access_token}",
+            "Content-Type": "application/json",
+            **self.headers,
+        }
+        response = requests.get(url, headers=headers, verify=self._tls_verify)
 
         return response.json()
 
-    def requestPOSTAPI(self, url):
-        print("url ######: ", url)
-        self.incrementTotalRequestCount()
-
-        access_token, request_token = self.getToken()
+    def requestPOSTAPI(self, url, payload_generator):
+        # print("url ", url)
+        access_token = self.token_manager.getAccessToken()
 
         headers = {
             "Content-Type": "application/json",
@@ -253,82 +101,10 @@ class Nepse:
         response = requests.post(
             url,
             headers=headers,
-            data=json.dumps(
-                {
-                    "id": self.getPOSTPayloadIDForNepseIndex()
-                    if url == self.api_end_points["nepse_index_daily_graph"]
-                    else self.getPOSTPayloadID()
-                }
-            ),
+            data=json.dumps({"id": payload_generator()}),
+            verify=self._tls_verify,
         )
-
-        print("post response: ", response.text)
-        if response.status_code != 200:
-            # self.refreshToken()
-            self.resetToken()
-            return self.requestPOSTAPI(url)
-
         return response.json()
-
-    # token is not unique for each url, when token is requested,
-    def getToken(self):
-        if self.api_end_point_access_token == (False, False):
-            token_response = self.getValidToken()
-            self.api_end_point_access_token = token_response
-
-        return self.api_end_point_access_token
-
-    def refreshToken(self):
-        print("refresh token")
-        access_token, refresh_token = self.api_end_point_access_token
-        if (
-            access_token != False
-        ):  # this is done to make first request to api/authenticate pass
-            data = json.dumps({"refreshToken": refresh_token})
-
-            headers = {
-                **self.headers,
-                "Content-Type": "application/json",
-                "Content-Length": str(len(data)),
-                "Authorization": f"Salter {access_token}",
-            }
-
-            refresh_key = requests.post(self.refresh_url, headers=headers, data=data)
-
-            if refresh_key.status_code != 200:
-                self.resetToken()
-            else:
-                self.api_end_point_access_token = self.getValidTokenFromJSON(
-                    refresh_key.json()
-                )
-        else:
-            self.getToken()
-
-    def resetToken(self):
-        self.api_end_point_access_token = (False, False)
-        self.salts = []
-
-    #         self.api_end_point_access_token[url] = False
-    def getValidTokenFromJSON(self, token_response):
-        self.salts = []
-        for salt_index in range(1, 6):
-            val = int(token_response[f"salt{salt_index}"])
-            token_response[f"salt{salt_index}"] = val
-            self.salts.append(val)
-
-        # returns access_token only, refresh token is not used right now
-        return self.token_parser.parse_token_response(token_response)
-
-    def getValidToken(self):
-        self.incrementTokenRequestCount()
-        token_response = self.requestAPI(url=self.token_url)
-        return self.getValidTokenFromJSON(token_response)
-
-    def incrementTokenRequestCount(self):
-        self.token_request_count += 1
-
-    def incrementTotalRequestCount(self):
-        self.total_request_count += 1
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
@@ -438,39 +214,32 @@ class Nepse:
             691,
         ]
 
-    def getPOSTPayloadIDForNepseIndex(self):
-        print("post paylod nepse index called")
+    def getPOSTPayloadID(self):
         dummy_id = self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
-        n = (
+        post_payload_id = (
             e
-            + self.salts[3 if e % 10 < 5 else 1] * date.today().day
-            - self.salts[(3 if e % 10 < 5 else 1) - 1]
+            + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
+            - self.token_manager.salts[(3 if e % 10 < 5 else 1) - 1]
         )
-        self.post_payload_id = n
+        return post_payload_id
 
-        print("post payload id ", self.post_payload_id)
-
-        return self.post_payload_id
-
-    def getPOSTPayloadID(self):
-        print("post payload for other called")
+    def getPOSTPayloadIDForFloorSheet(self):
         dummy_id = self.getDummyID()
-        self.post_payload_id = (
-            self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        post_payload_id = (
+            e
+            + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
+            - self.token_manager.salts[(1 if e % 10 < 4 else 3) - 1]
         )
-
-        return self.post_payload_id
+        return post_payload_id
 
     ###############################################PUBLIC METHODS###############################################
+    def setTLSVerification(self, flag):
+        self._tls_verify = flag
+
     def getMarketStatus(self):
         return self.requestAPI(url=self.api_end_points["nepse_isopen"])
-
-    def getTotalRequestCount(self):
-        return self.total_request_count
-
-    def getTokenRequestCount(self):
-        return self.token_request_count
 
     def getPriceVolume(self):
         return self.requestAPI(url=self.api_end_points["price_volume_url"])
@@ -505,15 +274,12 @@ class Nepse:
     def getNepseSubIndices(self):
         return self.requestAPI(url=self.api_end_points["nepse_subindices_url"])
 
-    def getCompanyList(self, force=False):
-        if self.company_list is None or force == True:
-            self.company_list = self.requestAPI(
-                url=self.api_end_points["company_list_url"]
-            )
+    def getCompanyList(self):
+        self.company_list = self.requestAPI(url=self.api_end_points["company_list_url"])
         return self.company_list
 
-    def getCompanyIDKeyMap(self):
-        if self.company_symbol_id_keymap is None:
+    def getCompanyIDKeyMap(self, force_update=False):
+        if self.company_symbol_id_keymap is None or force_update:
             company_list = self.getCompanyList()
             self.company_symbol_id_keymap = {
                 company["symbol"]: company["id"] for company in company_list
@@ -522,129 +288,158 @@ class Nepse:
 
     #####api requiring post method
     def getDailyNepseIndexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["nepse_index_daily_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["nepse_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailySensitiveIndexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["sensitive_index_daily_graph"]
+            url=self.api_end_points["sensitive_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyFloatIndexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["float_index_daily_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["float_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailySensitiveFloatIndexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["sensitive_float_index_daily_graph"]
+            url=self.api_end_points["sensitive_float_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyBankSubindexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["banking_sub_index_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["banking_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailyDevelopmentBankSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["development_bank_sub_index_graph"]
+            url=self.api_end_points["development_bank_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyFinanceSubindexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["finance_sub_index_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["finance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailyHotelTourismSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["hotel_tourism_sub_index_graph"]
+            url=self.api_end_points["hotel_tourism_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyHydroSubindexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["hydro_sub_index_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["hydro_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailyInvestmentSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["investment_sub_index_graph"]
+            url=self.api_end_points["investment_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyLifeInsuranceSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["life_insurance_sub_index_graph"]
+            url=self.api_end_points["life_insurance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyManufacturingSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["manufacturing_sub_index_graph"]
+            url=self.api_end_points["manufacturing_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyMicrofinanceSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["microfinance_sub_index_graph"]
+            url=self.api_end_points["microfinance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyMutualfundSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["mutual_fund_sub_index_graph"]
+            url=self.api_end_points["mutual_fund_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyNonLifeInsuranceSubindexGraph(self):
         return self.requestPOSTAPI(
-            url=self.api_end_points["non_life_insurance_sub_index_graph"]
+            url=self.api_end_points["non_life_insurance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getDailyOthersSubindexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["others_sub_index_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["others_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailyTradingSubindexGraph(self):
-        return self.requestPOSTAPI(url=self.api_end_points["trading_sub_index_graph"])
+        return self.requestPOSTAPI(
+            url=self.api_end_points["trading_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
 
     def getDailyScripPriceGraph(self, symbol):
         # return self.getCompanyIDKeyMap()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_daily_graph']}{company_id}"
+            url=f"{self.api_end_points['company_daily_graph']}{company_id}",
+            payload_generator=self.getPOSTPayloadID,
         )
 
     def getCompanyDetails(self, symbol):
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_details']}{company_id}"
+            url=f"{self.api_end_points['company_details']}{company_id}",
+            payload_generator=self.getPOSTPayloadID,
         )
 
     ##unfinished
     def getCompanyPriceVolumeHistory(self, symbol):
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_price_volume_history']}{company_id}"
+            url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
+            payload_generator=self.getPOSTPayloadID,
         )
 
-    def getFloorSheet(self, show_progress=False):
-        url = f"{self.api_end_points['floor_sheet']}?=&size={self.floor_sheet_size}&sort=contractId,asc"
-        sheet = self.requestPOSTAPI(url=url)
+    def getFloorSheet(self):
+        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+        sheet = self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
         floor_sheets = sheet["floorsheets"]["content"]
         page_range = range(1, sheet["floorsheets"]["totalPages"] + 1)
-        pages = tqdm.tqdm(page_range) if show_progress else page_range
-        for page in pages:
-            next_sheet = self.requestPOSTAPI(url=f"{url}&page={page}")
+        for page in page_range:
+            next_sheet = self.requestPOSTAPI(
+                url=f"{url}&page={page}",
+                payload_generator=self.getPOSTPayloadIDForFloorSheet,
+            )
             next_floor_sheet = next_sheet["floorsheets"]["content"]
             floor_sheets.extend(next_floor_sheet)
         return floor_sheets
 
     def getFloorSheetOf(self, symbol):
         company_id = self.getCompanyIDKeyMap()[symbol]
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?=&size={self.floor_sheet_size}&sort=contractId,asc&businessDate={date.isoformat(date.today())}"
-        sheet = self.requestPOSTAPI(url=url)
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate=2023-09-27&size={self.floor_sheet_size}&sort=contractid,desc"
+        sheet = self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
         floor_sheets = sheet["floorsheets"]["content"]
         for page in range(1, sheet["floorsheets"]["totalPages"] + 1):
-            next_sheet = self.requestPOSTAPI(url=f"{url}&page={page}")
+            next_sheet = self.requestPOSTAPI(
+                url=f"{url}&page={page}",
+                payload_generator=self.getPOSTPayloadIDForFloorSheet,
+            )
             next_floor_sheet = next_sheet["floorsheets"]["content"]
             floor_sheets.extend(next_floor_sheet)
         return floor_sheets
-
-
-def test():
-    a = Nepse()
-    # a.getFloorSheet(show_progress=True)
-    # print(a.getFloorSheetOf(symbol="MLBBL"))
-    # print(a.getValidToken())
-    # print(a.getDailyNepseIndexGraph())
-    # print(a.getPriceVolume())
-    print(a.getMarketStatus())
-
-
-if __name__ == "__main__":
-    test()

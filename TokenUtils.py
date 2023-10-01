@@ -31,10 +31,11 @@ class TokenManager:
         self.access_token = None
         self.refresh_token = None
         self.token_time_stamp = None
+        self.salts = None
 
     def isTokenValid(self):
         try:
-            return int(time.time()) - self.token_time_stamp < self.MAX_UPDATE_PERIOD
+            return (int(time.time()) - self.token_time_stamp) < self.MAX_UPDATE_PERIOD
         except:
             return False
 
@@ -57,17 +58,20 @@ class TokenManager:
 
     def __repr__(self):
         return (
-            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
+            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nSalts: {self.salts}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
             if self.access_token is not None
             else "Token Manager Not Initialized"
         )
 
     def _setToken(self):
+        json_response = self._getTokenHttpRequest()
+
         (
             self.access_token,
             self.refresh_token,
             self.token_time_stamp,
-        ) = self._getValidTokenFromJSON(self._getTokenHttpRequest())
+            self.salts,
+        ) = self._getValidTokenFromJSON(json_response)
 
     def _getTokenHttpRequest(self):
         token_response = requests.get(
@@ -77,16 +81,16 @@ class TokenManager:
         return token_response.json()
 
     def _getValidTokenFromJSON(self, token_response):
-        self.salts = []
+        salts = []
 
         for salt_index in range(1, 6):
             val = int(token_response[f"salt{salt_index}"])
-            token_response[f"salt{salt_index}"] = val
-            self.salts.append(val)
+            salts.append(val)
 
         return (
             *self.token_parser.parse_token_response(token_response),
             int(token_response["serverTime"] / 1000),
+            salts,
         )
 
 
