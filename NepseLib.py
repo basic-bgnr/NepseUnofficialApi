@@ -1,5 +1,6 @@
 from TokenUtils import TokenManager
-from datetime import date
+from datetime import date, datetime
+
 import json
 import requests
 
@@ -10,6 +11,9 @@ class Nepse:
         self._tls_verify = True
 
         self.token_manager = TokenManager()
+        self.dummy_id_manager = DummyIDManager(
+            date_function=datetime.now, market_status_function=self.getMarketStatus
+        )
 
         self.company_symbol_id_keymap = None
         self.company_list = None
@@ -30,7 +34,6 @@ class Nepse:
             "nepse_open_url": f"{self.base_url}/api/nots/nepse-data/market-open",
             "nepse_index_url": f"{self.base_url}/api/nots/nepse-index",
             "nepse_subindices_url": f"{self.base_url}/api/nots",
-            "nepse_isopen": f"{self.base_url}/api/nots/nepse-data/market-open",
             "company_list_url": f"{self.base_url}/api/nots/company/list",
             ###graph data api (these requires post request) ####
             "nepse_index_daily_graph": f"{self.base_url}/api/nots/graph/index/58",
@@ -54,7 +57,7 @@ class Nepse:
             ##company_graph_data (add company id after the frontslash)##
             "company_daily_graph": f"{self.base_url}/api/nots/market/graphdata/daily/",
             "company_details": f"{self.base_url}/api/nots/security/",
-            "company_price_volume_history": f"{self.base_url}/api/nots/market/security/price/",
+            "company_price_volume_history": f"{self.base_url}/api/nots/market/graphdata/",
             "company_floorsheet": f"{self.base_url}/api/nots/security/floorsheet/",
             "floor_sheet": f"{self.base_url}/api/nots/nepse-data/floorsheet",
             "todays_price": f"{self.base_url}/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06",
@@ -75,8 +78,7 @@ class Nepse:
         }
 
     ###############################################PRIVATE METHODS###############################################
-
-    def requestAPI(self, url):
+    def getAuthorizationHeaders(self):
         headers = self.headers
         access_token = self.token_manager.getAccessToken()
 
@@ -85,22 +87,19 @@ class Nepse:
             "Content-Type": "application/json",
             **self.headers,
         }
-        response = requests.get(url, headers=headers, verify=self._tls_verify)
 
+        return headers
+
+    def requestAPI(self, url):
+        response = requests.get(
+            url, headers=self.getAuthorizationHeaders(), verify=self._tls_verify
+        )
         return response.json()
 
     def requestPOSTAPI(self, url, payload_generator):
-        # print("url ", url)
-        access_token = self.token_manager.getAccessToken()
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Salter {access_token}",
-            **self.headers,
-        }
         response = requests.post(
             url,
-            headers=headers,
+            headers=self.getAuthorizationHeaders(),
             data=json.dumps({"id": payload_generator()}),
             verify=self._tls_verify,
         )
@@ -108,7 +107,8 @@ class Nepse:
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
-        return self.getMarketStatus()["id"]
+        # return self.getMarketStatus()["id"]
+        return self.dummy_id_manager.getDummyID()
 
     def getDummyData(self):
         return [
@@ -214,9 +214,13 @@ class Nepse:
             691,
         ]
 
-    def getPOSTPayloadID(self):
+    def getPOSTPayloadIDForScrips(self):
         dummy_id = self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        return e
+
+    def getPOSTPayloadID(self):
+        e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
             + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
@@ -225,8 +229,7 @@ class Nepse:
         return post_payload_id
 
     def getPOSTPayloadIDForFloorSheet(self):
-        dummy_id = self.getDummyID()
-        e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
             + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
@@ -239,7 +242,7 @@ class Nepse:
         self._tls_verify = flag
 
     def getMarketStatus(self):
-        return self.requestAPI(url=self.api_end_points["nepse_isopen"])
+        return self.requestAPI(url=self.api_end_points["nepse_open_url"])
 
     def getPriceVolume(self):
         return self.requestAPI(url=self.api_end_points["price_volume_url"])
@@ -394,22 +397,21 @@ class Nepse:
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
-            payload_generator=self.getPOSTPayloadID,
+            payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
     def getCompanyDetails(self, symbol):
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
-            payload_generator=self.getPOSTPayloadID,
+            payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    ##unfinished
     def getCompanyPriceVolumeHistory(self, symbol):
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
-            payload_generator=self.getPOSTPayloadID,
+            payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
     def getFloorSheet(self):
@@ -443,3 +445,154 @@ class Nepse:
             next_floor_sheet = next_sheet["floorsheets"]["content"]
             floor_sheets.extend(next_floor_sheet)
         return floor_sheets
+
+
+class DummyIDManager:
+    def __init__(self, date_function=datetime.now, market_status_function=None):
+        self.data = None
+        self.dummy_id = None
+        self.date_stamp = None
+
+        self.setDateFunction(date_function)
+        self.setMarketStatusFunction(market_status_function)
+
+    def setDateFunction(self, func):
+        self.date_function = func
+
+    def setMarketStatusFunction(self, func):
+        self.market_status_function = func
+        self.data = None
+
+    def populateData(self):
+        today = self.date_function()
+
+        if self.data is None:
+            self.data = self.market_status_function()
+            self.dummy_id = self.data["id"]
+            self.date_stamp = today
+            return
+
+        # check is day has already passed
+        # print("whey", self.date_stamp.date(), today.date())
+
+        if self.date_stamp.date() < today.date():
+            new_data = self.market_status_function()
+            new_converted_date = self.convertToDateTime(new_data["asOf"])
+
+            # check if nepse date is equal to current date
+            if new_converted_date.date() == today.date():
+                self.data = new_data
+                self.dummy_id = self.data["id"]
+                self.date_stamp = new_converted_date
+
+            # nepse date is not equal to current date which means nepse is closed
+            # in such case we set the date stamp to today so that we dont have to check it everytime
+            else:
+                self.data = new_data
+                self.dummy_id = self.data["id"]
+                self.date_stamp = today
+
+    def convertToDateTime(self, date_time_str):
+        return datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
+
+    def getDummyID(self):
+        self.populateData()
+        return self.dummy_id
+
+    def __repr__(self):
+        return f"<Dummy ID: {self.dummy_id}, Date: {self.date_stamp}>"
+
+
+def testDummyManager():
+    def friday():
+        print("friday_called")
+        return {
+            "isOpen": "Pre Open CLOSE",
+            "asOf": "2023-09-27T10:45:00",
+            "id": 80,
+        }
+
+    def saturday():
+        print("saturday_called")
+        return {
+            "isOpen": "Pre Open CLOSE",
+            "asOf": "2023-09-27T10:45:00",
+            "id": 81,
+        }
+
+    def sunday():
+        print("sunday_called")
+        return {
+            "isOpen": "Pre Open CLOSE",
+            "asOf": "2023-10-01T10:45:00",
+            "id": 82,
+        }
+
+    def monday():
+        print("monday called")
+        return {
+            "isOpen": "Pre Open CLOSE",
+            "asOf": "2023-10-02T10:45:00",
+            "id": 82,
+        }
+
+    today_friday = lambda: datetime(2023, 9, 28)
+    today_saturday = lambda: datetime(2023, 9, 29)
+    today_sunday = lambda: datetime(2023, 10, 1)
+    today_monday = lambda: datetime(2023, 10, 2)
+
+    dummy_manager = DummyIDManager()
+
+    # dummy_manager.setDateFunction(today_friday)
+    # dummy_manager.setMarketStatusFunction(friday)
+    # dummy_manager.getDummyID()
+    # print(dummy_manager)
+
+    # dummy_manager.setMarketStatusFunction(friday)
+    # dummy_manager.getDummyID()
+    # print(dummy_manager)
+
+    # dummy_manager.setMarketStatusFunction(friday)
+    # dummy_manager.getDummyID()
+    # print(dummy_manager)
+
+    # dummy_manager.setDateFunction(today_saturday)
+    # dummy_manager.setMarketStatusFunction(saturday)
+    # dummy_manager.getDummyID()
+    # print(dummy_manager)
+
+    dummy_manager.setDateFunction(today_saturday)
+    dummy_manager.setMarketStatusFunction(saturday)
+
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+
+    dummy_manager.setDateFunction(today_sunday)
+    dummy_manager.setMarketStatusFunction(saturday)
+
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+
+    dummy_manager.setDateFunction(today_sunday)
+    dummy_manager.setMarketStatusFunction(sunday)
+
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+
+    dummy_manager.setDateFunction(today_monday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
+
+
+nep = Nepse()
+nep.setTLSVerification(False)
