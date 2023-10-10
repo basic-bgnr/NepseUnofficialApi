@@ -1,0 +1,4 @@
+beautifulsoup4==4.12.2
+Flask==2.3.2
+pywasm==1.0.8
+requests==2.18.4
