@@ -10,7 +10,7 @@ Deciphers the authentication key to access the api.
 ```
 git clone https://github.com/basic-bgnr/NepseUnofficialApi.git 
 cd NepseUnofficialApi
-pip3 install -r requirement.txt
+pip3 install -r Requirements.txt
 python3 -m nepse 
 ```
 The example folder contains `/example/NepseServer.py` an implementation of
