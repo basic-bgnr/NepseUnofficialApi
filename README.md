@@ -3,6 +3,7 @@ Unofficial library to interface with nepalstock.com.np
 Deciphers the authentication key to access the api.
 
 # How to Use
+1. Make sure your python version >= 3.8.0
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
 1. Install the dependencies 
