@@ -23,6 +23,7 @@ python3 NepseServer.py
 
 
 # Development
+1. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file 
 1. [Oct 10, 2023] Module(files, folders) restructuring
 1. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
 1. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch. 

@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 import json
 import requests
+import pathlib
 
 
 class Nepse:
@@ -22,63 +23,32 @@ class Nepse:
         self.floor_sheet_size = 500
 
         self.base_url = "https://www.nepalstock.com.np"
-        self.api_end_points = {
-            "price_volume_url": f"{self.base_url}/api/nots/securityDailyTradeStat/58",
-            "summary_url": f"{self.base_url}/api/nots/market-summary/",
-            "supply_demand_url": f"{self.base_url}/api/nots/nepse-data/supplydemand",
-            "turnover_url": f"{self.base_url}/api/nots/top-ten/turnover",
-            "top_gainers_url": f"{self.base_url}/api/nots/top-ten/top-gainer",
-            "top_losers_url": f"{self.base_url}/api/nots/top-ten/top-loser",
-            "top_ten_trade_url": f"{self.base_url}/api/nots/top-ten/trade",
-            "top_ten_transaction_url": f"{self.base_url}/api/nots/top-ten/transaction",
-            "top_ten_turnover_url": f"{self.base_url}/api/nots/top-ten/turnover",
-            "nepse_open_url": f"{self.base_url}/api/nots/nepse-data/market-open",
-            "nepse_index_url": f"{self.base_url}/api/nots/nepse-index",
-            "nepse_subindices_url": f"{self.base_url}/api/nots",
-            "company_list_url": f"{self.base_url}/api/nots/company/list",
-            ###graph data api (these requires post request) ####
-            "nepse_index_daily_graph": f"{self.base_url}/api/nots/graph/index/58",
-            "sensitive_index_daily_graph": f"{self.base_url}/api/nots/graph/index/57",
-            "float_index_daily_graph": f"{self.base_url}/api/nots/graph/index/62",
-            "sensitive_float_index_daily_graph": f"{self.base_url}/api/nots/graph/index/63",
-            ##sub index graph##
-            "banking_sub_index_graph": f"{self.base_url}/api/nots/graph/index/51",
-            "development_bank_sub_index_graph": f"{self.base_url}/api/nots/graph/index/55",
-            "finance_sub_index_graph": f"{self.base_url}/api/nots/graph/index/60",
-            "hotel_tourism_sub_index_graph": f"{self.base_url}/api/nots/graph/index/52",
-            "hydro_sub_index_graph": f"{self.base_url}/api/nots/graph/index/54",
-            "investment_sub_index_graph": f"{self.base_url}/api/nots/graph/index/67",
-            "life_insurance_sub_index_graph": f"{self.base_url}/api/nots/graph/index/65",
-            "manufacturing_sub_index_graph": f"{self.base_url}/api/nots/graph/index/56",
-            "microfinance_sub_index_graph": f"{self.base_url}/api/nots/graph/index/64",
-            "mutual_fund_sub_index_graph": f"{self.base_url}/api/nots/graph/index/66",
-            "non_life_insurance_sub_index_graph": f"{self.base_url}/api/nots/graph/index/59",
-            "others_sub_index_graph": f"{self.base_url}/api/nots/graph/index/53",
-            "trading_sub_index_graph": f"{self.base_url}/api/nots/graph/index/61",
-            ##company_graph_data (add company id after the frontslash)##
-            "company_daily_graph": f"{self.base_url}/api/nots/market/graphdata/daily/",
-            "company_details": f"{self.base_url}/api/nots/security/",
-            "company_price_volume_history": f"{self.base_url}/api/nots/market/graphdata/",
-            "company_floorsheet": f"{self.base_url}/api/nots/security/floorsheet/",
-            "floor_sheet": f"{self.base_url}/api/nots/nepse-data/floorsheet",
-            "todays_price": f"{self.base_url}/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06",
-        }
 
-        self.headers = {
-            # host doesn't work with https prefix so removing it
-            "Host": self.base_url.replace("https://", ""),
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0",
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-            "Referer": f"{self.base_url}",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
-            "TE": "Trailers",
-        }
+        self.load_json_api_end_points()
+        self.load_json_dummy_data()
+        self.load_json_header()
 
     ###############################################PRIVATE METHODS###############################################
+    def load_json_header(self):
+        json_file_path = f"{pathlib.Path(__file__).parent}/HEADERS.json"
+        with open(json_file_path, "r") as json_file:
+            self.headers = json.load(json_file)
+            self.headers["Host"] = self.base_url.replace("https://", "")
+            self.headers["Referer"] = self.base_url.replace("https://", "")
+
+    def load_json_api_end_points(self):
+        json_file_path = f"{pathlib.Path(__file__).parent}/API_ENDPOINTS.json"
+        with open(json_file_path, "r") as json_file:
+            self.api_end_points = json.load(json_file)
+
+        for key, value in self.api_end_points.items():
+            self.api_end_points[key] = f"{self.base_url}{value}"
+
+    def load_json_dummy_data(self):
+        json_file_path = f"{pathlib.Path(__file__).parent}/DUMMY_DATA.json"
+        with open(json_file_path, "r") as json_file:
+            self.dummy_data = json.load(json_file)
+
     def getAuthorizationHeaders(self):
         headers = self.headers
         access_token = self.token_manager.getAccessToken()
@@ -112,108 +82,7 @@ class Nepse:
         return self.dummy_id_manager.getDummyID()
 
     def getDummyData(self):
-        return [
-            147,
-            117,
-            239,
-            143,
-            157,
-            312,
-            161,
-            612,
-            512,
-            804,
-            411,
-            527,
-            170,
-            511,
-            421,
-            667,
-            764,
-            621,
-            301,
-            106,
-            133,
-            793,
-            411,
-            511,
-            312,
-            423,
-            344,
-            346,
-            653,
-            758,
-            342,
-            222,
-            236,
-            811,
-            711,
-            611,
-            122,
-            447,
-            128,
-            199,
-            183,
-            135,
-            489,
-            703,
-            800,
-            745,
-            152,
-            863,
-            134,
-            211,
-            142,
-            564,
-            375,
-            793,
-            212,
-            153,
-            138,
-            153,
-            648,
-            611,
-            151,
-            649,
-            318,
-            143,
-            117,
-            756,
-            119,
-            141,
-            717,
-            113,
-            112,
-            146,
-            162,
-            660,
-            693,
-            261,
-            362,
-            354,
-            251,
-            641,
-            157,
-            178,
-            631,
-            192,
-            734,
-            445,
-            192,
-            883,
-            187,
-            122,
-            591,
-            731,
-            852,
-            384,
-            565,
-            596,
-            451,
-            772,
-            624,
-            691,
-        ]
+        return self.dummy_data
 
     def getPOSTPayloadIDForScrips(self):
         dummy_id = self.getDummyID()
