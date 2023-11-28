@@ -3,3 +3,4 @@ __*
 !__init__.py
 !__main__.py
 !.gitignore
+!.github/
