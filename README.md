@@ -1,3 +1,4 @@
+![Build](https://github.com/github/docs/actions/workflows/actions.yml/badge.svg)  
 # NepseUnofficialApi
 Unofficial library to interface with nepalstock.com.np
 Deciphers the authentication key to access the api.

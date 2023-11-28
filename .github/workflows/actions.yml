@@ -2,7 +2,7 @@ name: run module
 
 on:
   schedule:
-    - cron: '*/1 * * * *' # At 00:00 on Monday
+    - cron: '*/10 * * * *' 
 
 jobs:
   build:
