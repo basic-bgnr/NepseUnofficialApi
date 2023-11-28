@@ -2,7 +2,10 @@ name: run module
 
 on:
   schedule:
-    - cron: '*/10 * * * *' 
+    - cron: '0 7 * * *' 
+    - cron: '30 10 * * *' 
+    - cron: '45 10 * * *' 
+    - cron: '0 15 * * *' 
 
 jobs:
   build:
@@ -10,12 +13,12 @@ jobs:
     steps:
 
       - name: checkout repo content
-        uses: actions/checkout@v2 # checkout the repository content to github runner
+        uses: actions/checkout@v2 
 
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8' # install the python version needed
+          python-version: '3.8' 
           
       - name: install python packages
         run: |
