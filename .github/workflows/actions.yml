@@ -2,10 +2,10 @@ name: run module
 
 on:
   schedule:
-    - cron: '45 12 * * *' #0700 local time, 1245 utc
-    - cron: '15 16 * * *' #1030 local time, 1615 utc
-    - cron: '30 16 * * *' #1045 local time, 1630 utc
-    - cron: '45 20 * * *' #1500 local time, 2015 utc
+    - cron: '15 1 * * *' #0700 local time, 0115 utc
+    - cron: '45 4 * * *' #1030 local time, 0445 utc
+    - cron: '0 5 * * *'  #1045 local time, 0500 utc
+    - cron: '15 9 * * *' #1500 local time, 0915 utc
 
 jobs:
   build:
