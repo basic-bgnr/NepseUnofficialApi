@@ -7,13 +7,11 @@ Deciphers the authentication key to access the api.
 1. Make sure your python version >= 3.8.0
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
-1. Install the dependencies 
-1. Run the module. (running the module returns the current market status) 
+1. Install the package
 ```
 git clone https://github.com/basic-bgnr/NepseUnofficialApi.git 
 cd NepseUnofficialApi
-pip3 install -r Requirements.txt
-python3 -m nepse 
+pip3 install .
 ```
 The example folder contains `/example/NepseServer.py` an implementation of
 this library. The following runs a local flask server on `localhost:8000`.  
@@ -21,9 +19,16 @@ this library. The following runs a local flask server on `localhost:8000`.
 cd example
 python3 NepseServer.py
 ``` 
-
+# Usage
+```
+from nepse import Nepse
+nepse = Nepse()
+nepse.setTLSVerification(False) #This is temporary, until nepse sorts its ssl certificate problem
+nepse.getCompanyList()
+```
 
 # Development
+1. [Mar 23, 2024] add setup.py to ease installation process.
 1. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file 
 1. [Oct 10, 2023] Module(files, folders) restructuring
 1. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
