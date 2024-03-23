@@ -4,3 +4,5 @@ __*
 !__main__.py
 !.gitignore
 !.github/
+build/
+nepse.egg-info/
