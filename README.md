@@ -4,6 +4,7 @@ Unofficial library to interface with nepalstock.com.np
 Deciphers the authentication key to access the api.
 
 # How to Use
+## A. Using Git + pip
 1. Make sure your python version >= 3.8.0
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
@@ -13,6 +14,11 @@ git clone https://github.com/basic-bgnr/NepseUnofficialApi.git
 cd NepseUnofficialApi
 pip3 install .
 ```
+## B. Using pip only(install directly from git)
+```
+pip install git+https://github.com/basic-bgnr/NepseUnofficialApi
+```
+# Example
 The example folder contains `/example/NepseServer.py` an implementation of
 this library. The following runs a local flask server on `localhost:8000`.  
 ```
