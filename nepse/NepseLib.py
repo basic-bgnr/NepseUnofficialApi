@@ -43,6 +43,8 @@ class Nepse:
 
         for key, value in self.api_end_points.items():
             self.api_end_points[key] = f"{self.base_url}{value}"
+    def get_full_url(self, api_url):
+        return f"{self.base_url}{api_url}"
 
     def load_json_dummy_data(self):
         json_file_path = f"{pathlib.Path(__file__).parent}/DUMMY_DATA.json"
