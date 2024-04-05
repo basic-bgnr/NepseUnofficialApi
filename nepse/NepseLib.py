@@ -11,7 +11,7 @@ class Nepse:
         # internal flag to set tls verification true or false during http request
         self.init_client(tls_verify=True)
 
-        self.token_manager = TokenManager()
+        self.token_manager = TokenManager(self)
         self.dummy_id_manager = DummyIDManager(
             market_status_function=self.getMarketStatus,
             date_function=datetime.now,

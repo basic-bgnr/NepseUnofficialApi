@@ -1,33 +1,19 @@
 import pywasm
-import requests
 from datetime import datetime
 import time
 import pathlib
 
 
 class TokenManager:
-    def __init__(self):
+    def __init__(self, nepse):
+        self.nepse = nepse
+
         self.MAX_UPDATE_PERIOD = 45
 
         self.token_parser = TokenParser()
 
-        self.base_url = "https://www.nepalstock.com.np"
-        self.token_url = f"{self.base_url}/api/authenticate/prove"
-        self.refresh_url = f"{self.base_url}/api/authenticate/refresh-token"
-
-        self.headers = {
-            # host doesn't work with https prefix so removing it
-            "Host": self.base_url.replace("https://", ""),
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0",
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-            "Referer": f"{self.base_url}",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
-            "TE": "Trailers",
-        }
+        self.token_url = "/api/authenticate/prove"
+        self.refresh_url = "/api/authenticate/refresh-token"
 
         self.access_token = None
         self.refresh_token = None
@@ -66,7 +52,9 @@ class TokenManager:
         )
 
     def _setToken(self):
-        json_response = self._getTokenHttpRequest()
+        json_response = self.nepse.requestGETAPI(
+            url=self.token_url, include_authorization_headers=False
+        )
 
         (
             self.access_token,
