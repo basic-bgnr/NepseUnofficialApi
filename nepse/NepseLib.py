@@ -2,14 +2,14 @@ from nepse.TokenUtils import TokenManager
 from datetime import date, datetime
 
 import json
-import requests
+import httpx
 import pathlib
 
 
 class Nepse:
     def __init__(self):
         # internal flag to set tls verification true or false during http request
-        self._tls_verify = True
+        self.init_client(tls_verify=True)
 
         self.token_manager = TokenManager()
         self.dummy_id_manager = DummyIDManager(
@@ -63,18 +63,22 @@ class Nepse:
 
         return headers
 
-        response = requests.get(
-            url, headers=self.getAuthorizationHeaders(), verify=self._tls_verify
     def requestGETAPI(self, url, include_authorization_headers=True):
+        response = self.client.get(
+            self.get_full_url(api_url=url),
+            headers=(
+                self.getAuthorizationHeaders()
+                if include_authorization_headers
+                else self.headers
+            ),
         )
         return response.json()
 
     def requestPOSTAPI(self, url, payload_generator):
-        response = requests.post(
-            url,
+        response = self.client.post(
+            self.get_full_url(api_url=url),
             headers=self.getAuthorizationHeaders(),
             data=json.dumps({"id": payload_generator()}),
-            verify=self._tls_verify,
         )
         return response.json()
 
@@ -110,8 +114,12 @@ class Nepse:
         return post_payload_id
 
     ###############################################PUBLIC METHODS###############################################
+    def init_client(self, tls_verify):
+        self.client = httpx.Client(verify=tls_verify)
+
     def setTLSVerification(self, flag):
         self._tls_verify = flag
+        self.init_client(self._tls_verify)
 
     def getMarketStatus(self):
         return self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
