@@ -35,10 +35,11 @@ class TokenManager:
         self.salts = None
 
     def isTokenValid(self):
-        try:
-            return (int(time.time()) - self.token_time_stamp) < self.MAX_UPDATE_PERIOD
-        except:
-            return False
+        return (
+            (int(time.time()) - self.token_time_stamp) < self.MAX_UPDATE_PERIOD
+            if self.token_time_stamp
+            else False
+        )
 
     def getAccessToken(self):
         return (
