@@ -86,7 +86,7 @@ class TokenManager:
 
 class TokenParser:
     def __init__(self):
-        self.runtime = pywasm.load(f"{pathlib.Path(__file__).parent}/css.wasm")
+        self.runtime = pywasm.load(f"{pathlib.Path(__file__).parent}/data/css.wasm")
 
     def parse_token_response(self, token_response):
         n = self.runtime.exec(

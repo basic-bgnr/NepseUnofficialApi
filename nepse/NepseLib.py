@@ -30,24 +30,22 @@ class Nepse:
 
     ###############################################PRIVATE METHODS###############################################
     def load_json_header(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/HEADERS.json"
+        json_file_path = f"{pathlib.Path(__file__).parent}/data/HEADERS.json"
         with open(json_file_path, "r") as json_file:
             self.headers = json.load(json_file)
             self.headers["Host"] = self.base_url.replace("https://", "")
             self.headers["Referer"] = self.base_url.replace("https://", "")
 
     def load_json_api_end_points(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/API_ENDPOINTS.json"
+        json_file_path = f"{pathlib.Path(__file__).parent}/data/API_ENDPOINTS.json"
         with open(json_file_path, "r") as json_file:
             self.api_end_points = json.load(json_file)
 
-        for key, value in self.api_end_points.items():
-            self.api_end_points[key] = f"{self.base_url}{value}"
     def get_full_url(self, api_url):
         return f"{self.base_url}{api_url}"
 
     def load_json_dummy_data(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/DUMMY_DATA.json"
+        json_file_path = f"{pathlib.Path(__file__).parent}/data/DUMMY_DATA.json"
         with open(json_file_path, "r") as json_file:
             self.dummy_data = json.load(json_file)
 
