@@ -61,9 +61,9 @@ class Nepse:
 
         return headers
 
-    def requestAPI(self, url):
         response = requests.get(
             url, headers=self.getAuthorizationHeaders(), verify=self._tls_verify
+    def requestGETAPI(self, url, include_authorization_headers=True):
         )
         return response.json()
 
@@ -112,43 +112,45 @@ class Nepse:
         self._tls_verify = flag
 
     def getMarketStatus(self):
-        return self.requestAPI(url=self.api_end_points["nepse_open_url"])
+        return self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
 
     def getPriceVolume(self):
-        return self.requestAPI(url=self.api_end_points["price_volume_url"])
+        return self.requestGETAPI(url=self.api_end_points["price_volume_url"])
 
     def getSummary(self):
-        return self.requestAPI(url=self.api_end_points["summary_url"])
+        return self.requestGETAPI(url=self.api_end_points["summary_url"])
 
     def getTopTenTradeScrips(self):
-        return self.requestAPI(url=self.api_end_points["top_ten_trade_url"])
+        return self.requestGETAPI(url=self.api_end_points["top_ten_trade_url"])
 
     def getTopTenTransactionScrips(self):
-        return self.requestAPI(url=self.api_end_points["top_ten_transaction_url"])
+        return self.requestGETAPI(url=self.api_end_points["top_ten_transaction_url"])
 
     def getTopTenTurnoverScrips(self):
-        return self.requestAPI(url=self.api_end_points["top_ten_turnover_url"])
+        return self.requestGETAPI(url=self.api_end_points["top_ten_turnover_url"])
 
     def getSupplyDemand(self):
-        return self.requestAPI(url=self.api_end_points["supply_demand_url"])
+        return self.requestGETAPI(url=self.api_end_points["supply_demand_url"])
 
     def getTopGainers(self):
-        return self.requestAPI(url=self.api_end_points["top_gainers_url"])
+        return self.requestGETAPI(url=self.api_end_points["top_gainers_url"])
 
     def getTopLosers(self):
-        return self.requestAPI(url=self.api_end_points["top_losers_url"])
+        return self.requestGETAPI(url=self.api_end_points["top_losers_url"])
 
     def isNepseOpen(self):
-        return self.requestAPI(url=self.api_end_points["nepse_open_url"])
+        return self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
 
     def getNepseIndex(self):
-        return self.requestAPI(url=self.api_end_points["nepse_index_url"])
+        return self.requestGETAPI(url=self.api_end_points["nepse_index_url"])
 
     def getNepseSubIndices(self):
-        return self.requestAPI(url=self.api_end_points["nepse_subindices_url"])
+        return self.requestGETAPI(url=self.api_end_points["nepse_subindices_url"])
 
     def getCompanyList(self):
-        self.company_list = self.requestAPI(url=self.api_end_points["company_list_url"])
+        self.company_list = self.requestGETAPI(
+            url=self.api_end_points["company_list_url"]
+        )
         return self.company_list
 
     def getCompanyIDKeyMap(self, force_update=False):
