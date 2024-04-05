@@ -28,6 +28,7 @@ nepse.getCompanyList()
 ```
 
 # Development
+1. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
 1. [Mar 23, 2024] add setup.py to ease installation process.
 1. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file 
 1. [Oct 10, 2023] Module(files, folders) restructuring
