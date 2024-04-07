@@ -78,11 +78,10 @@ class Nepse:
             headers=self.getAuthorizationHeaders(),
             data=json.dumps({"id": payload_generator()}),
         )
-        return response.json()
+        return response.json() if response.text else {}
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
-        # return self.getMarketStatus()["id"]
         return self.dummy_id_manager.getDummyID()
 
     def getDummyData(self):
@@ -312,20 +311,29 @@ class Nepse:
             floor_sheets.extend(next_floor_sheet)
         return floor_sheets
 
-    def getFloorSheetOf(self, symbol):
+    def getFloorSheetOf(self, symbol, business_date=None):
+        symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate=2023-09-27&size={self.floor_sheet_size}&sort=contractid,desc"
+        business_date = (
+            date.fromisoformat(business_date)
+            if business_date
+            else date.today()
+        )
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
-        floor_sheets = sheet["floorsheets"]["content"]
-        for page in range(1, sheet["floorsheets"]["totalPages"] + 1):
-            next_sheet = self.requestPOSTAPI(
-                url=f"{url}&page={page}",
-                payload_generator=self.getPOSTPayloadIDForFloorSheet,
-            )
-            next_floor_sheet = next_sheet["floorsheets"]["content"]
-            floor_sheets.extend(next_floor_sheet)
+        if sheet:  # sheet might be empty
+            floor_sheets = sheet["floorsheets"]["content"]
+            for page in range(1, sheet["floorsheets"]["totalPages"] + 1):
+                next_sheet = self.requestPOSTAPI(
+                    url=f"{url}&page={page}",
+                    payload_generator=self.getPOSTPayloadIDForFloorSheet,
+                )
+                next_floor_sheet = next_sheet["floorsheets"]["content"]
+                floor_sheets.extend(next_floor_sheet)
+        else:
+            floor_sheets = []
         return floor_sheets
 
 
