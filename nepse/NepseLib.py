@@ -353,10 +353,10 @@ class DummyIDManager:
         self.market_status_function = func
         self.data = None
 
-    def populateData(self):
+    def populateData(self, force=False):
         today = self.date_function()
 
-        if self.data is None:
+        if self.data is None or force:
             self.data = self.market_status_function()
             self.dummy_id = self.data["id"]
             self.date_stamp = today
