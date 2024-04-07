@@ -295,21 +295,33 @@ class Nepse:
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getFloorSheet(self):
+    def getFloorSheet(self, page_step=4):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
         floor_sheets = sheet["floorsheets"]["content"]
-        page_range = range(1, sheet["floorsheets"]["totalPages"] + 1)
-        for page in page_range:
-            next_sheet = self.requestPOSTAPI(
-                url=f"{url}&page={page}",
+        max_page = sheet["floorsheets"]["totalPages"]
+        page_range = range(1, max_page + 1, page_step)
+        for page_number in page_range:
+            _nepse = Nepse()
+            _nepse.setTLSVerification(self._tls_verify)
+            floor_sheets.extend(
+                _nepse._getFloorSheetPages(url, page_number, page_step, max_page + 1)
+            )
+
+        return floor_sheets
+
+    def _getFloorSheetPages(self, url, page_number, page_step, max_page):
+        pages = []
+        for page_number in range(page_number, min(page_number + page_step, max_page)):
+            current_sheet = self.requestPOSTAPI(
+                url=f"{url}&page={page_number}",
                 payload_generator=self.getPOSTPayloadIDForFloorSheet,
             )
-            next_floor_sheet = next_sheet["floorsheets"]["content"]
-            floor_sheets.extend(next_floor_sheet)
-        return floor_sheets
+            current_sheet_content = current_sheet["floorsheets"]["content"]
+            pages.extend(current_sheet_content)
+        return pages
 
     def getFloorSheetOf(self, symbol, business_date=None):
         symbol = symbol.upper()
