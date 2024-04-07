@@ -273,7 +273,7 @@ class Nepse:
         )
 
     def getDailyScripPriceGraph(self, symbol):
-        # return self.getCompanyIDKeyMap()
+        symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
@@ -281,6 +281,7 @@ class Nepse:
         )
 
     def getCompanyDetails(self, symbol):
+        symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
@@ -288,6 +289,7 @@ class Nepse:
         )
 
     def getCompanyPriceVolumeHistory(self, symbol):
+        symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
