@@ -52,9 +52,7 @@ class TokenManager:
         )
 
     def _setToken(self):
-        json_response = self.nepse.requestGETAPI(
-            url=self.token_url, include_authorization_headers=False
-        )
+        json_response = self._getTokenHttpRequest()
 
         (
             self.access_token,
@@ -64,11 +62,9 @@ class TokenManager:
         ) = self._getValidTokenFromJSON(json_response)
 
     def _getTokenHttpRequest(self):
-        token_response = requests.get(
-            self.token_url, headers=self.headers, verify=False
+        return self.nepse.requestGETAPI(
+            url=self.token_url, include_authorization_headers=False
         )
-
-        return token_response.json()
 
     def _getValidTokenFromJSON(self, token_response):
         salts = []
