@@ -70,7 +70,10 @@ class Nepse:
                 else self.headers
             ),
         )
-        return response.json()
+        try:
+            return response.json() if response.text else {}
+        except json.JSONDecodeError:
+            return {}
 
     def requestPOSTAPI(self, url, payload_generator):
         response = self.client.post(
@@ -78,7 +81,10 @@ class Nepse:
             headers=self.getAuthorizationHeaders(),
             data=json.dumps({"id": payload_generator()}),
         )
-        return response.json() if response.text else {}
+        try:
+            return response.json() if response.text else {}
+        except json.JSONDecodeError:
+            return {}
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
