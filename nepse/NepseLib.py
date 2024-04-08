@@ -297,33 +297,22 @@ class Nepse:
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getFloorSheet(self, page_step=4):
+    def getFloorSheet(self):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = range(1, max_page + 1, page_step)
+        page_range = range(1, max_page + 1)
         for page_number in page_range:
-            _nepse = Nepse()
-            _nepse.setTLSVerification(self._tls_verify)
-            floor_sheets.extend(
-                _nepse._getFloorSheetPages(url, page_number, page_step, max_page + 1)
-            )
-
-        return floor_sheets
-
-    def _getFloorSheetPages(self, url, page_number, page_step, max_page):
-        pages = []
-        for page_number in range(page_number, min(page_number + page_step, max_page)):
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
                 payload_generator=self.getPOSTPayloadIDForFloorSheet,
             )
             current_sheet_content = current_sheet["floorsheets"]["content"]
-            pages.extend(current_sheet_content)
-        return pages
+            floor_sheets.extend(current_sheet_content)
+        return floor_sheets
 
     def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-dd-mm string or date object
