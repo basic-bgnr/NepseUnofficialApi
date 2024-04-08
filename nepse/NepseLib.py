@@ -324,12 +324,11 @@ class Nepse:
         return pages
 
     def getFloorSheetOf(self, symbol, business_date=None):
+        # business date can be YYYY-dd-mm string or date object
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         business_date = (
-            date.fromisoformat(business_date)
-            if business_date
-            else date.today()
+            date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
         url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = self.requestPOSTAPI(
