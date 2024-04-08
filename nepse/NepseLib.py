@@ -315,7 +315,7 @@ class Nepse:
         return floor_sheets
 
     def getFloorSheetOf(self, symbol, business_date=None):
-        # business date can be YYYY-dd-mm string or date object
+        # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         business_date = (
