@@ -22,7 +22,7 @@ class Nepse:
 
         self.floor_sheet_size = 500
 
-        self.base_url = "https://www.nepalstock.com.np"
+        self.base_url = "https://www.nepalstock.com"
 
         self.load_json_api_end_points()
         self.load_json_dummy_data()
@@ -112,7 +112,9 @@ class Nepse:
 
     ###############################################PUBLIC METHODS###############################################
     def init_client(self, tls_verify):
-        self.client = httpx.Client(verify=tls_verify)
+        # limits prevent rate limit imposed by nepse
+        limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
+        self.client = httpx.Client(verify=tls_verify, limits=limits)
 
     def setTLSVerification(self, flag):
         self._tls_verify = flag
