@@ -1,6 +1,6 @@
 [![Status](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml/badge.svg)](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml)  
 # NepseUnofficialApi
-Unofficial library to interface with nepalstock.com.np
+Unofficial library to interface with nepalstock.com
 Deciphers the authentication key to access the api.
 
 # How to Use
@@ -34,14 +34,17 @@ nepse.getCompanyList()
 ```
 
 # Development
-1. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception 
-1. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
-1. [Mar 23, 2024] add setup.py to ease installation process.
-1. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file 
-1. [Oct 10, 2023] Module(files, folders) restructuring
-1. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
-1. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch. 
-1. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
+1. [Apr 08, 2024]
+   * APIs can now be called without rate limitation or raising Exception (no need to add delay between API calls),
+   * Speed Improvement ( getFloorSheet() and getFloorSheetOf() calls are ~3 times faster)
+2. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
+3. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
+4. [Mar 23, 2024] add setup.py to ease installation process.
+5. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
+6. [Oct 10, 2023] Module(files, folders) restructuring
+7. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
+8. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
+9. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
 
 
 # Fix Details 
