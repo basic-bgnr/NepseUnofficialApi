@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nepse"
-version = "0.1.2"
+version = "0.1.3"
 authors = [ { name="basic-bgnr"} ]
-description = "Unofficial API to interface with https://www.nepalstock.com.np"
+description = "Unofficial API to interface with https://www.nepalstock.com"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
