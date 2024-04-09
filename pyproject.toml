@@ -30,6 +30,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
+exclude = ["example*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.wasm"]
