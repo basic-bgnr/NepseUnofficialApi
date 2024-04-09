@@ -34,3 +34,6 @@ exclude = ["example*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.wasm"]
+
+[project.scripts]
+nepse-cli = "nepse:main_cli"

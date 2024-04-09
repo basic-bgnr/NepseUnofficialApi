@@ -4,6 +4,37 @@ from nepse.NepseLib import Nepse
 __all__ = [
     "Nepse",
 ]
+
+
+def main_cli():
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="cmdline iterface to nepalstock.com")
+
+    parser.add_argument(
+        "--start-server",
+        action="store_true",
+        default=False,
+        dest="start_server",
+        help="starts local server at 0.0.0.0:8000",
+    )
+    parser.add_argument(
+        "--show-status",
+        action="store_true",
+        default=False,
+        dest="show_status",
+        help="dumps Nepse status in the standard output",
+    )
+
+    args = parser.parse_args()
+
+    if args.start_server:
+        start_server()
+    if args.show_status:
+        show_status()
+
+
 def show_status():
 
     from nepse import Nepse
