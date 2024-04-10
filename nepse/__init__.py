@@ -24,7 +24,30 @@ def main_cli():
         action="store_true",
         default=False,
         dest="show_status",
-        help="dumps Nepse status in the standard output",
+        help="dumps Nepse status to the standard output",
+    )
+    parser.add_argument(
+        "--get-floorsheet",
+        action="store_true",
+        default=False,
+        dest="get_floorsheet",
+        help="dumps Nepse's floorsheet to the standard output",
+    )
+
+    parser.add_argument(
+        "--output-file",
+        action="store",
+        metavar="FILE",
+        default=None,
+        dest="output_file",
+        help="sets the output file for dumping the content",
+    )
+    parser.add_argument(
+        "--hide-progressbar",
+        action="store_true",
+        default=False,
+        dest="hide_progress",
+        help="sets the visibility of progress base to False",
     )
 
     args = parser.parse_args()
@@ -32,7 +55,11 @@ def main_cli():
     if args.start_server:
         start_server()
     if args.show_status:
-        show_status()
+        output_content = show_status()
+    if args.get_floorsheet:
+        output_content = get_floorsheet(not args.hide_progress)
+
+    dump_to_std_file_descriptor(args.output_file, output_content)
 
 
 def dump_to_std_file_descriptor(output_destination, output_content):
@@ -63,15 +90,13 @@ def get_floorsheet(show_progress):
 def show_status():
 
     from nepse import Nepse
-    import json
-    from pprint import pprint
 
     share_market = Nepse()
     share_market.setTLSVerification(False)
 
     summary = {item["detail"]: item["value"] for item in share_market.getSummary()}
 
-    pprint(summary)
+    return summary
 
 
 def start_server():
