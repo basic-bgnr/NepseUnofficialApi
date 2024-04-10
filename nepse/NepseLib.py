@@ -63,29 +63,33 @@ class Nepse:
         return headers
 
     def requestGETAPI(self, url, include_authorization_headers=True):
-        response = self.client.get(
-            self.get_full_url(api_url=url),
-            headers=(
-                self.getAuthorizationHeaders()
-                if include_authorization_headers
-                else self.headers
-            ),
-        )
         try:
+            response = self.client.get(
+                self.get_full_url(api_url=url),
+                headers=(
+                    self.getAuthorizationHeaders()
+                    if include_authorization_headers
+                    else self.headers
+                ),
+            )
             return response.json() if response.text else {}
         except json.JSONDecodeError:
             return {}
+        except httpx.RemoteProtocolError:
+            return self.requestGETAPI(url, include_authorization_headers)
 
     def requestPOSTAPI(self, url, payload_generator):
-        response = self.client.post(
-            self.get_full_url(api_url=url),
-            headers=self.getAuthorizationHeaders(),
-            data=json.dumps({"id": payload_generator()}),
-        )
         try:
+            response = self.client.post(
+                self.get_full_url(api_url=url),
+                headers=self.getAuthorizationHeaders(),
+                data=json.dumps({"id": payload_generator()}),
+            )
             return response.json() if response.text else {}
         except json.JSONDecodeError:
             return {}
+        except httpx.RemoteProtocolError:
+            return self.requestPOSTAPI(url, payload_generator)
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
