@@ -1,6 +1,7 @@
 from nepse.TokenUtils import TokenManager
 from datetime import date, datetime
 
+from tqdm import tqdm
 import json
 import httpx
 import pathlib
@@ -303,14 +304,16 @@ class Nepse:
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getFloorSheet(self):
+    def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = range(1, max_page + 1)
+        page_range = (
+            tqdm(range(1, max_page + 1)) if show_progress else range(1, max_page + 1)
+        )
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
