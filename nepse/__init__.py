@@ -35,6 +35,22 @@ def main_cli():
         show_status()
 
 
+def dump_to_std_file_descriptor(output_destination, output_content):
+
+    from pprint import pprint
+    import json
+
+    json_dump = json.dumps(output_content)
+
+    if output_destination:
+        with open(output_destination, "w") as output_file:
+            output_file.write(json_dump)
+    else:
+        print(json_dump)
+
+
+
+
 def show_status():
 
     from nepse import Nepse

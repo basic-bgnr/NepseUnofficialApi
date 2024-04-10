@@ -1,3 +1,3 @@
-from nepse import show_status
+from nepse import show_status, dump_to_std_file_descriptor
 
-show_status()
+dump_to_std_file_descriptor(None, show_status())
