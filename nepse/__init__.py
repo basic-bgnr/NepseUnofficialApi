@@ -49,6 +49,15 @@ def dump_to_std_file_descriptor(output_destination, output_content):
         print(json_dump)
 
 
+def get_floorsheet(show_progress):
+
+    from nepse import Nepse
+
+    share_market = Nepse()
+    share_market.setTLSVerification(False)
+
+    floorsheet = share_market.getFloorSheet(show_progress)
+    return floorsheet
 
 
 def show_status():
