@@ -76,6 +76,24 @@ def dump_to_std_file_descriptor(output_destination, output_content):
     else:
         print(json_dump)
 
+def convert_json_to_csv(json_content):
+    import csv
+    from io import StringIO
+
+    csv_file = StringIO()
+    csv_writer = csv.writer(csv_file)
+
+    if type(json_content) is dict:
+        csv_writer.writerow(json_content.keys())  # headers
+        csv_writer.writerow(json_content.values())  # values
+    else:
+        headers = json_content[0].keys()
+        csv_writer.writerow(headers)  # headers
+        for header_values in json_content:
+            csv_writer.writerow(header_values.values())  # values
+
+    return csv_file.getvalue()
+
 
 def get_floorsheet(show_progress):
 
