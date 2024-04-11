@@ -43,6 +43,13 @@ def main_cli():
         help="sets the output file for dumping the content",
     )
     parser.add_argument(
+        "--to-csv",
+        action="store_true",
+        default=False,
+        dest="convert_to_csv",
+        help="sets the output format from default[JSON] to CSV",
+    )
+    parser.add_argument(
         "--hide-progressbar",
         action="store_true",
         default=False,
@@ -52,7 +59,7 @@ def main_cli():
 
     args = parser.parse_args()
     output_content = None
-    
+
     if args.start_server:
         start_server()
     if args.show_status:
@@ -60,21 +67,28 @@ def main_cli():
     if args.get_floorsheet:
         output_content = get_floorsheet(not args.hide_progress)
     if output_content:
-        dump_to_std_file_descriptor(args.output_file, output_content)
+        dump_to_std_file_descriptor(
+            args.output_file, output_content, convert_to_csv=args.convert_to_csv
+        )
 
 
-def dump_to_std_file_descriptor(output_destination, output_content):
+def dump_to_std_file_descriptor(output_destination, output_content, convert_to_csv):
 
     from pprint import pprint
     import json
 
-    json_dump = json.dumps(output_content)
+    parsed_output = (
+        convert_json_to_csv(output_content)
+        if convert_to_csv
+        else json.dumps(output_content)
+    )
 
     if output_destination:
         with open(output_destination, "w") as output_file:
-            output_file.write(json_dump)
+            output_file.write(parsed_output)
     else:
-        print(json_dump)
+        print(parsed_output)
+
 
 def convert_json_to_csv(json_content):
     import csv
