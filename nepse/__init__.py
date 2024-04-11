@@ -51,15 +51,16 @@ def main_cli():
     )
 
     args = parser.parse_args()
-
+    output_content = None
+    
     if args.start_server:
         start_server()
     if args.show_status:
         output_content = show_status()
     if args.get_floorsheet:
         output_content = get_floorsheet(not args.hide_progress)
-
-    dump_to_std_file_descriptor(args.output_file, output_content)
+    if output_content:
+        dump_to_std_file_descriptor(args.output_file, output_content)
 
 
 def dump_to_std_file_descriptor(output_destination, output_content):
