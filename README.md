@@ -49,7 +49,7 @@ nepse-cli --get-floorsheet --output-file floor.json
 ```
 To Download the entire floorsheet of the day into file `floor.csv` in `CSV` format, you can.
 ```
-nepse-cli --get-floorsheet --output-file --to-csv floor.csv
+nepse-cli --get-floorsheet --to-csv --output-file floor.csv
 ```
 ### C. Example
 The example folder contains `/example/NepseServer.py` an implementation of
