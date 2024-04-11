@@ -10,7 +10,7 @@ def main_cli():
 
     import argparse
 
-    parser = argparse.ArgumentParser(description="cmdline iterface to nepalstock.com")
+    parser = argparse.ArgumentParser(description="cmdline interface to nepalstock.com")
 
     parser.add_argument(
         "--start-server",
