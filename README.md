@@ -30,9 +30,9 @@ nepse.getCompanyList()
 After installing the package, `nepse-cli` cmdline tool is available
 ```
 dev└─ $ nepse-cli --help
-usage: nepse-cli [-h] [--start-server] [--show-status] [--get-floorsheet] [--output-file FILE] [--hide-progressbar]
+usage: nepse-cli [-h] [--start-server] [--show-status] [--get-floorsheet] [--output-file FILE] [--to-csv] [--hide-progressbar]
 
-cmdline iterface to nepalstock.com
+cmdline interface to nepalstock.com
 
 options:
   -h, --help          show this help message and exit
@@ -40,11 +40,16 @@ options:
   --show-status       dumps Nepse status to the standard output
   --get-floorsheet    dumps Nepse's floorsheet to the standard output
   --output-file FILE  sets the output file for dumping the content
+  --to-csv            sets the output format from default[JSON] to CSV
   --hide-progressbar  sets the visibility of progress base to False
 ```
-To Download the entire floorsheet of the day into file `floor.json`, you can.
+To Download the entire floorsheet of the day into file `floor.json` in `JSON` format, you can.
 ```
 nepse-cli --get-floorsheet --output-file floor.json
+```
+To Download the entire floorsheet of the day into file `floor.csv` in `CSV` format, you can.
+```
+nepse-cli --get-floorsheet --output-file --to-csv floor.csv
 ```
 ### C. Example
 The example folder contains `/example/NepseServer.py` an implementation of
@@ -61,23 +66,26 @@ pip uninstall nepse
 ```
 
 # Development
+1. [Apr 11, 2024]
+   * Added new cmd-line flag [--to-csv]
+   * removed bug on empty argument to nepse-cli
 1. [Apr 10, 2024]
    * Handled httpx.RemoteProtocolError when sending multiple request to nepse's server.
    * Added new cmd-line flags [--get-floorsheet, --output-file]
-2. [Apr 09, 2024]
+1. [Apr 09, 2024]
    * APIs now make use of HTTP2 request to nepse's server
    * Added tool `nepse-cli` which can be directly used from the terminal after installing the package
-3. [Apr 08, 2024]
+1. [Apr 08, 2024]
    * APIs can now be called without rate limitation or raising Exception (no need to add delay between API calls),
    * Speed Improvement ( getFloorSheet() and getFloorSheetOf() calls are ~3 times faster)
-4. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
-5. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
-6. [Mar 23, 2024] add setup.py to ease installation process.
-7. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
-8. [Oct 10, 2023] Module(files, folders) restructuring
-9.  [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
-10. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
-11. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
+1. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
+1. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
+1. [Mar 23, 2024] add setup.py to ease installation process.
+1. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
+1.  [Oct 10, 2023] Module(files, folders) restructuring
+1. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
+1. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
+1. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
 
 
 # Fix Details 
