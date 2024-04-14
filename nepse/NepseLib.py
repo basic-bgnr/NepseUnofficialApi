@@ -1,6 +1,7 @@
 from nepse.TokenUtils import TokenManager
 from datetime import date, datetime
 
+from tqdm import tqdm
 import json
 import httpx
 import pathlib
@@ -62,29 +63,33 @@ class Nepse:
         return headers
 
     def requestGETAPI(self, url, include_authorization_headers=True):
-        response = self.client.get(
-            self.get_full_url(api_url=url),
-            headers=(
-                self.getAuthorizationHeaders()
-                if include_authorization_headers
-                else self.headers
-            ),
-        )
         try:
+            response = self.client.get(
+                self.get_full_url(api_url=url),
+                headers=(
+                    self.getAuthorizationHeaders()
+                    if include_authorization_headers
+                    else self.headers
+                ),
+            )
             return response.json() if response.text else {}
         except json.JSONDecodeError:
             return {}
+        except httpx.RemoteProtocolError:
+            return self.requestGETAPI(url, include_authorization_headers)
 
     def requestPOSTAPI(self, url, payload_generator):
-        response = self.client.post(
-            self.get_full_url(api_url=url),
-            headers=self.getAuthorizationHeaders(),
-            data=json.dumps({"id": payload_generator()}),
-        )
         try:
+            response = self.client.post(
+                self.get_full_url(api_url=url),
+                headers=self.getAuthorizationHeaders(),
+                data=json.dumps({"id": payload_generator()}),
+            )
             return response.json() if response.text else {}
         except json.JSONDecodeError:
             return {}
+        except httpx.RemoteProtocolError:
+            return self.requestPOSTAPI(url, payload_generator)
 
     ##################method to get post payload id#################################33
     def getDummyID(self):
@@ -120,7 +125,7 @@ class Nepse:
     def init_client(self, tls_verify):
         # limits prevent rate limit imposed by nepse
         limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
-        self.client = httpx.Client(verify=tls_verify, limits=limits)
+        self.client = httpx.Client(verify=tls_verify, limits=limits, http2=True)
 
     def setTLSVerification(self, flag):
         self._tls_verify = flag
@@ -303,14 +308,16 @@ class Nepse:
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getFloorSheet(self):
+    def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = range(1, max_page + 1)
+        page_range = (
+            tqdm(range(1, max_page + 1)) if show_progress else range(1, max_page + 1)
+        )
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",

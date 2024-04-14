@@ -1,8 +1,5 @@
-from nepse import Nepse
-import json
+from nepse import show_status, dump_to_std_file_descriptor
 
-share_market = Nepse()
-share_market.setTLSVerification(False)
-
-summary = {item["detail"]: item["value"] for item in share_market.getSummary()}
-print(json.dumps(summary))
+dump_to_std_file_descriptor(
+    output_destination=None, output_content=show_status(), convert_to_csv=False
+)

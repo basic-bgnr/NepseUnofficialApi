@@ -3,8 +3,8 @@
 Unofficial library to interface with nepalstock.com
 Deciphers the authentication key to access the api.
 
-# How to Use
-## A. Using Git + pip
+# How to Install?
+### A. Using Git + pip
 1. Make sure your python version >= 3.8.0
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
@@ -14,37 +14,81 @@ git clone https://github.com/basic-bgnr/NepseUnofficialApi.git
 cd NepseUnofficialApi
 pip3 install .
 ```
-## B. Using pip only(install directly from git)
+### B. Using pip only(install directly from git)
 ```
 pip install git+https://github.com/basic-bgnr/NepseUnofficialApi
 ```
-# Example
-The example folder contains `/example/NepseServer.py` an implementation of
-this library. The following runs a local flask server on `localhost:8000`.  
-```
-cd example
-python3 NepseServer.py
-``` 
-# Usage
+# How to use?
+### A. API usage
 ```
 from nepse import Nepse
 nepse = Nepse()
 nepse.setTLSVerification(False) #This is temporary, until nepse sorts its ssl certificate problem
 nepse.getCompanyList()
 ```
+### B. Cli tool
+After installing the package, `nepse-cli` cmdline tool is available
+```
+dev└─ $ nepse-cli --help
+usage: nepse-cli [-h] [-v] [--start-server] [--show-status] [--get-floorsheet] [--output-file FILE] [--to-csv] [--hide-progressbar]
+
+cmdline interface to nepalstock.com
+
+options:
+  -h, --help          show this help message and exit
+  -v, --version       displays the version info
+  --start-server      starts local server at 0.0.0.0:8000
+  --show-status       dumps Nepse status to the standard output
+  --get-floorsheet    dumps Nepse's floorsheet to the standard output
+  --output-file FILE  sets the output file for dumping the content
+  --to-csv            sets the output format from default[JSON] to CSV
+  --hide-progressbar  sets the visibility of progress base to False
+```
+To Download the entire floorsheet of the day into file `floor.json` in `JSON` format, you can.
+```
+nepse-cli --get-floorsheet --output-file floor.json
+```
+To Download the entire floorsheet of the day into file `floor.csv` in `CSV` format, you can.
+```
+nepse-cli --get-floorsheet --to-csv --output-file floor.csv
+```
+### C. Example
+The example folder contains `/example/NepseServer.py` an implementation of
+this library. The following runs a local flask server on `localhost:8000`.  
+```
+cd example
+python3 NepseServer.py
+``` 
+
+# Uninstallation
+Running the following command will remove the package from the system.
+```
+pip uninstall nepse
+```
 
 # Development
-1. [Apr 08, 2024]
+1. [Apr 14, 2024]
+   * Added new cmd-line flag [--version]
+2. [Apr 11, 2024]
+   * Added new cmd-line flag [--to-csv]
+   * removed bug on empty argument to nepse-cli
+3. [Apr 10, 2024]
+   * Handled httpx.RemoteProtocolError when sending multiple request to nepse's server.
+   * Added new cmd-line flags [--get-floorsheet, --output-file]
+4. [Apr 09, 2024]
+   * APIs now make use of HTTP2 request to nepse's server
+   * Added tool `nepse-cli` which can be directly used from the terminal after installing the package
+5. [Apr 08, 2024]
    * APIs can now be called without rate limitation or raising Exception (no need to add delay between API calls),
    * Speed Improvement ( getFloorSheet() and getFloorSheetOf() calls are ~3 times faster)
-2. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
-3. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
-4. [Mar 23, 2024] add setup.py to ease installation process.
-5. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
-6. [Oct 10, 2023] Module(files, folders) restructuring
-7. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
-8. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
-9. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
+6. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
+7. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
+8. [Mar 23, 2024] add setup.py to ease installation process.
+9.  [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
+10. [Oct 10, 2023] Module(files, folders) restructuring
+11. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
+12. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
+13. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
 
 
 # Fix Details 
