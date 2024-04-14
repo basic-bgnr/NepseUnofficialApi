@@ -12,8 +12,8 @@ __all__ = [
     "Nepse",
 ]
 
-__version__ = "0.1.3.dev0"
-__release_date__ = timestamp(2024, 4, 13)
+__version__ = "0.2.0"
+__release_date__ = timestamp(2024, 4, 14)
 
 
 def main_cli():
