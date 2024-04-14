@@ -9,12 +9,23 @@ __all__ = [
     "Nepse",
 ]
 
+__version__ =  '0.1.3.dev0'
+__release_date__ = timestamp(2024, 4, 13)
 
 def main_cli():
 
     import argparse
 
     parser = argparse.ArgumentParser(description="cmdline interface to nepalstock.com")
+
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        default=False,
+        dest="version",
+        help="displays the version info",
+    )
 
     parser.add_argument(
         "--start-server",
@@ -64,6 +75,8 @@ def main_cli():
     args = parser.parse_args()
     output_content = None
 
+    if args.version:
+        show_version()
     if args.start_server:
         start_server()
     if args.show_status:
@@ -75,6 +88,8 @@ def main_cli():
             args.output_file, output_content, convert_to_csv=args.convert_to_csv
         )
 
+def show_version():
+    print(f"nepse-cli built using nepse.v{__version__}({__release_date__})")
 
 def dump_to_std_file_descriptor(output_destination, output_content, convert_to_csv):
 
