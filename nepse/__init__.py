@@ -1,5 +1,9 @@
 from nepse.NepseLib import Nepse
 
+#function added to reduce namespace pollution (importing datetime)
+def timestamp(year, month, date):
+    import datetime
+    return datetime.date(year, month, date)
 
 __all__ = [
     "Nepse",
