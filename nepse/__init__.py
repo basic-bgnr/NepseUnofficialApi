@@ -1,16 +1,20 @@
 from nepse.NepseLib import Nepse
 
-#function added to reduce namespace pollution (importing datetime)
+
+# function added to reduce namespace pollution (importing datetime)
 def timestamp(year, month, date):
     import datetime
+
     return datetime.date(year, month, date)
+
 
 __all__ = [
     "Nepse",
 ]
 
-__version__ =  '0.1.3.dev0'
+__version__ = "0.1.3.dev0"
 __release_date__ = timestamp(2024, 4, 13)
+
 
 def main_cli():
 
@@ -88,8 +92,10 @@ def main_cli():
             args.output_file, output_content, convert_to_csv=args.convert_to_csv
         )
 
+
 def show_version():
     print(f"nepse-cli built using nepse.v{__version__}({__release_date__})")
+
 
 def dump_to_std_file_descriptor(output_destination, output_content, convert_to_csv):
 
