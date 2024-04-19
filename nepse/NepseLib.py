@@ -49,7 +49,18 @@ class _Nepse:
         with open(json_file_path, "r") as json_file:
             self.dummy_data = json.load(json_file)
 
-    def getAuthorizationHeaders(self):
+    def getDummyData(self):
+        return self.dummy_data
+
+    def init_client(self, tls_verify):
+        pass
+
+    ###############################################PUBLIC METHODS###############################################
+    def setTLSVerification(self, flag):
+        self._tls_verify = flag
+        self.init_client(tls_verify=flag)
+
+
         headers = self.headers
         access_token = self.token_manager.getAccessToken()
 
@@ -355,9 +366,7 @@ class Nepse(_Nepse):
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = (
-            tqdm(range(1, max_page)) if show_progress else range(1, max_page)
-        )
+        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
@@ -380,7 +389,7 @@ class Nepse(_Nepse):
         )
         if sheet:  # sheet might be empty
             floor_sheets = sheet["floorsheets"]["content"]
-            for page in range(1, sheet["floorsheets"]["totalPages"] + 1):
+            for page in range(1, sheet["floorsheets"]["totalPages"]):
                 next_sheet = self.requestPOSTAPI(
                     url=f"{url}&page={page}",
                     payload_generator=self.getPOSTPayloadIDForFloorSheet,
