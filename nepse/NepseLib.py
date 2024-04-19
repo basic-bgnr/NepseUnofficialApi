@@ -315,9 +315,7 @@ class Nepse:
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = (
-            tqdm(range(1, max_page + 1)) if show_progress else range(1, max_page + 1)
-        )
+        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
@@ -340,7 +338,7 @@ class Nepse:
         )
         if sheet:  # sheet might be empty
             floor_sheets = sheet["floorsheets"]["content"]
-            for page in range(1, sheet["floorsheets"]["totalPages"] + 1):
+            for page in range(1, sheet["floorsheets"]["totalPages"]):
                 next_sheet = self.requestPOSTAPI(
                     url=f"{url}&page={page}",
                     payload_generator=self.getPOSTPayloadIDForFloorSheet,
