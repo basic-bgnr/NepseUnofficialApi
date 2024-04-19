@@ -1,4 +1,4 @@
-from nepse.TokenUtils import TokenManager
+from nepse.TokenUtils import TokenManager, AsyncTokenManager
 from datetime import date, datetime
 
 from tqdm import tqdm
@@ -62,8 +62,48 @@ class _Nepse:
         self.init_client(tls_verify=flag)
 
 
+class AsyncNepse(_Nepse):
+    def __init__(self):
+        super().__init__(AsyncTokenManager, AsyncDummyIDManager)
+        # internal flag to set tls verification true or false during http request
+        self.init_client(tls_verify=True)
+
+    ###############################################PRIVATE METHODS###############################################
+    async def getDummyID(self):
+        return await self.dummy_id_manager.getDummyID()
+
+    async def getPOSTPayloadIDForScrips(self):
+        dummy_id = await self.getDummyID()
+        e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        return e
+
+    async def getPOSTPayloadID(self):
+        e = await self.getPOSTPayloadIDForScrips()
+        # we need to await before update is completed
+        await self.token_manager.update_completed.wait()
+        post_payload_id = (
+            e
+            + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
+            - self.token_manager.salts[(3 if e % 10 < 5 else 1) - 1]
+        )
+        return post_payload_id
+
+    async def getPOSTPayloadIDForFloorSheet(self):
+        e = await self.getPOSTPayloadIDForScrips()
+
+        # we need to await before update is completed
+        await self.token_manager.update_completed.wait()
+
+        post_payload_id = (
+            e
+            + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
+            - self.token_manager.salts[(1 if e % 10 < 4 else 3) - 1]
+        )
+        return post_payload_id
+
+    async def getAuthorizationHeaders(self):
         headers = self.headers
-        access_token = self.token_manager.getAccessToken()
+        access_token = await self.token_manager.getAccessToken()
 
         headers = {
             "Authorization": f"Salter {access_token}",
@@ -73,12 +113,20 @@ class _Nepse:
 
         return headers
 
-    def requestGETAPI(self, url, include_authorization_headers=True):
+    def init_client(self, tls_verify):
+        # limits prevent rate limit imposed by nepse
+        limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
+        # self.client = httpx.AsyncClient(verify=tls_verify, limits=limits, http2=True)
+        self.client = httpx.AsyncClient(
+            verify=tls_verify, limits=limits, http2=False, timeout=10
+        )
+
+    async def requestGETAPI(self, url, include_authorization_headers=True):
         try:
-            response = self.client.get(
+            response = await self.client.get(
                 self.get_full_url(api_url=url),
                 headers=(
-                    self.getAuthorizationHeaders()
+                    await self.getAuthorizationHeaders()
                     if include_authorization_headers
                     else self.headers
                 ),
@@ -87,22 +135,267 @@ class _Nepse:
         except json.JSONDecodeError:
             return {}
         except httpx.RemoteProtocolError:
-            return self.requestGETAPI(url, include_authorization_headers)
+            return await self.requestGETAPI(url, include_authorization_headers)
 
-    def requestPOSTAPI(self, url, payload_generator):
+    async def requestPOSTAPI(self, url, payload_generator):
         try:
-            response = self.client.post(
+            response = await self.client.post(
                 self.get_full_url(api_url=url),
-                headers=self.getAuthorizationHeaders(),
-                data=json.dumps({"id": payload_generator()}),
+                headers=await self.getAuthorizationHeaders(),
+                data=json.dumps({"id": await payload_generator()}),
             )
             return response.json() if response.text else {}
         except json.JSONDecodeError:
             return {}
         except httpx.RemoteProtocolError:
-            return self.requestPOSTAPI(url, payload_generator)
+            return await self.requestPOSTAPI(url, payload_generator)
 
-    ##################method to get post payload id#################################33
+    ###############################################PUBLIC METHODS###############################################
+    async def getMarketStatus(self):
+        return await self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
+
+    async def getPriceVolume(self):
+        return await self.requestGETAPI(url=self.api_end_points["price_volume_url"])
+
+    async def getSummary(self):
+        return await self.requestGETAPI(url=self.api_end_points["summary_url"])
+
+    async def getTopTenTradeScrips(self):
+        return await self.requestGETAPI(url=self.api_end_points["top_ten_trade_url"])
+
+    async def getTopTenTransactionScrips(self):
+        return await self.requestGETAPI(
+            url=self.api_end_points["top_ten_transaction_url"]
+        )
+
+    async def getTopTenTurnoverScrips(self):
+        return await self.requestGETAPI(url=self.api_end_points["top_ten_turnover_url"])
+
+    async def getSupplyDemand(self):
+        return await self.requestGETAPI(url=self.api_end_points["supply_demand_url"])
+
+    async def getTopGainers(self):
+        return await self.requestGETAPI(url=self.api_end_points["top_gainers_url"])
+
+    async def getTopLosers(self):
+        return await self.requestGETAPI(url=self.api_end_points["top_losers_url"])
+
+    async def isNepseOpen(self):
+        return await self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
+
+    async def getNepseIndex(self):
+        return await self.requestGETAPI(url=self.api_end_points["nepse_index_url"])
+
+    async def getNepseSubIndices(self):
+        return await self.requestGETAPI(url=self.api_end_points["nepse_subindices_url"])
+
+    async def getCompanyList(self):
+        self.company_list = await self.requestGETAPI(
+            url=self.api_end_points["company_list_url"]
+        )
+        return self.company_list
+
+    async def getCompanyIDKeyMap(self, force_update=False):
+        if self.company_symbol_id_keymap is None or force_update:
+            company_list = await self.getCompanyList()
+            self.company_symbol_id_keymap = {
+                company["symbol"]: company["id"] for company in company_list
+            }
+        return self.company_symbol_id_keymap
+
+    #####api requiring post method
+    async def getDailyNepseIndexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["nepse_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailySensitiveIndexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["sensitive_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyFloatIndexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["float_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailySensitiveFloatIndexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["sensitive_float_index_daily_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyBankSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["banking_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyDevelopmentBankSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["development_bank_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyFinanceSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["finance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyHotelTourismSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["hotel_tourism_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyHydroSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["hydro_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyInvestmentSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["investment_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyLifeInsuranceSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["life_insurance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyManufacturingSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["manufacturing_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyMicrofinanceSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["microfinance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyMutualfundSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["mutual_fund_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyNonLifeInsuranceSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["non_life_insurance_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyOthersSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["others_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyTradingSubindexGraph(self):
+        return await self.requestPOSTAPI(
+            url=self.api_end_points["trading_sub_index_graph"],
+            payload_generator=self.getPOSTPayloadID,
+        )
+
+    async def getDailyScripPriceGraph(self, symbol):
+        symbol = symbol.upper()
+        company_id = await self.getCompanyIDKeyMap()[symbol]
+        return await self.requestPOSTAPI(
+            url=f"{self.api_end_points['company_daily_graph']}{company_id}",
+            payload_generator=self.getPOSTPayloadIDForScrips,
+        )
+
+    async def getCompanyDetails(self, symbol):
+        symbol = symbol.upper()
+        company_id = await self.getCompanyIDKeyMap()[symbol]
+        return await self.requestPOSTAPI(
+            url=f"{self.api_end_points['company_details']}{company_id}",
+            payload_generator=self.getPOSTPayloadIDForScrips,
+        )
+
+    async def getCompanyPriceVolumeHistory(self, symbol):
+        symbol = symbol.upper()
+        company_id = await self.getCompanyIDKeyMap()[symbol]
+        return await self.requestPOSTAPI(
+            url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
+            payload_generator=self.getPOSTPayloadIDForScrips,
+        )
+
+    async def getFloorSheet(self, show_progress=False):
+
+        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+        sheet = await self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
+        floor_sheets = sheet["floorsheets"]["content"]
+        max_page = sheet["floorsheets"]["totalPages"]
+
+        page_range = range(1, max_page)
+
+        if show_progress:
+            progress_counter = (_ for _ in tqdm(page_range))
+            next(progress_counter)  # first page has already been downloaded
+        else:
+            progress_counter = None
+
+        awaitables = map(
+            lambda page_number: self._getFloorSheetPageNumber(
+                url,
+                page_number,
+                progress_counter,
+            ),
+            page_range,
+        )
+        floor_sheets = [floor_sheets] + await asyncio.gather(*awaitables)
+        return [row for array in floor_sheets for row in array]
+
+    async def _getFloorSheetPageNumber(self, url, page_number, progress_counter=None):
+        current_sheet = await self.requestPOSTAPI(
+            url=f"{url}&page={page_number}",
+            payload_generator=self.getPOSTPayloadIDForFloorSheet,
+        )
+        current_sheet_content = current_sheet["floorsheets"]["content"]
+        if progress_counter:
+            try:
+                next(progress_counter)
+            except StopIteration:
+                pass
+        return current_sheet_content
+
+    async def getFloorSheetOf(self, symbol, business_date=None):
+        # business date can be YYYY-mm-dd string or date object
+        symbol = symbol.upper()
+        company_id = await self.getCompanyIDKeyMap()[symbol]
+        business_date = (
+            date.fromisoformat(f"{business_date}") if business_date else date.today()
+        )
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
+        sheet = await self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
+        if sheet:  # sheet might be empty
+            floor_sheets = sheet["floorsheets"]["content"]
+            for page in range(1, sheet["floorsheets"]["totalPages"]):
+                next_sheet = await self.requestPOSTAPI(
+                    url=f"{url}&page={page}",
+                    payload_generator=self.getPOSTPayloadIDForFloorSheet,
+                )
+                next_floor_sheet = next_sheet["floorsheets"]["content"]
+                floor_sheets.extend(next_floor_sheet)
+        else:
+            floor_sheets = []
+        return floor_sheets
+
+
 class Nepse(_Nepse):
     def __init__(self):
         super().__init__(TokenManager, DummyIDManager)
