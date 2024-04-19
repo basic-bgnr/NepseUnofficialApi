@@ -1,4 +1,5 @@
 from nepse.NepseLib import Nepse
+from nepse.NepseLib import AsyncNepse
 
 
 # function added to reduce namespace pollution (importing datetime)
@@ -10,6 +11,7 @@ def timestamp(year, month, date):
 
 __all__ = [
     "Nepse",
+    "AsyncNepse",
 ]
 
 __version__ = "0.2.0.dev0"
