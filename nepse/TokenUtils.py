@@ -1,10 +1,10 @@
 import pywasm
-from datetime import datetime
 import time
 import pathlib
+from datetime import datetime
 
 
-class TokenManager:
+class _TokenManager:
     def __init__(self, nepse):
         self.nepse = nepse
 
@@ -27,6 +27,31 @@ class TokenManager:
             else False
         )
 
+    def __repr__(self):
+        return (
+            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nSalts: {self.salts}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
+            if self.access_token is not None
+            else "Token Manager Not Initialized"
+        )
+
+    def _getValidTokenFromJSON(self, token_response):
+        salts = []
+
+        for salt_index in range(1, 6):
+            val = int(token_response[f"salt{salt_index}"])
+            salts.append(val)
+
+        return (
+            *self.token_parser.parse_token_response(token_response),
+            int(token_response["serverTime"] / 1000),
+            salts,
+        )
+
+
+class TokenManager(_TokenManager):
+    def __init__(self, nepse):
+        super().__init__(nepse)
+
     def getAccessToken(self):
         return (
             self.access_token
@@ -43,13 +68,6 @@ class TokenManager:
 
     def update(self):
         self._setToken()
-
-    def __repr__(self):
-        return (
-            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nSalts: {self.salts}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
-            if self.access_token is not None
-            else "Token Manager Not Initialized"
-        )
 
     def _setToken(self):
         json_response = self._getTokenHttpRequest()
