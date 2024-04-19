@@ -376,7 +376,7 @@ class AsyncNepse(_Nepse):
     async def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
-        company_id = await self.getCompanyIDKeyMap()[symbol]
+        company_id = (await self.getCompanyIDKeyMap())[symbol]
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
