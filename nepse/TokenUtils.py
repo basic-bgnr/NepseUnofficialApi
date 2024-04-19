@@ -1,6 +1,8 @@
 import pywasm
 import time
 import pathlib
+import asyncio
+
 from datetime import datetime
 
 
@@ -45,6 +47,52 @@ class _TokenManager:
             *self.token_parser.parse_token_response(token_response),
             int(token_response["serverTime"] / 1000),
             salts,
+        )
+
+
+class AsyncTokenManager(_TokenManager):
+    def __init__(self, nepse):
+        super().__init__(nepse)
+
+        self.update_started = asyncio.Event()
+        self.update_completed = asyncio.Event()
+
+    async def getAccessToken(self):
+        if self.isTokenValid():
+            return self.access_token
+        else:
+            await self.update()
+            return self.access_token
+
+    async def getRefreshToken(self):
+        if self.isTokenValid():
+            return self.access_token
+        else:
+            await self.update()
+            return self.refresh_token
+
+    async def update(self):
+        await self._setToken()
+
+    async def _setToken(self):
+        if not self.update_started.is_set():
+            self.update_started.set()
+            self.update_completed.clear()
+            json_response = await self._getTokenHttpRequest()
+            (
+                self.access_token,
+                self.refresh_token,
+                self.token_time_stamp,
+                self.salts,
+            ) = self._getValidTokenFromJSON(json_response)
+            self.update_completed.set()
+            self.update_started.clear()
+        else:
+            await self.update_completed.wait()
+
+    async def _getTokenHttpRequest(self):
+        return await self.nepse.requestGETAPI(
+            url=self.token_url, include_authorization_headers=False
         )
 
 
