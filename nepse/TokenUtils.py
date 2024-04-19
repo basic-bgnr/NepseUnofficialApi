@@ -1,10 +1,12 @@
 import pywasm
-from datetime import datetime
 import time
 import pathlib
+import asyncio
+
+from datetime import datetime
 
 
-class TokenManager:
+class _TokenManager:
     def __init__(self, nepse):
         self.nepse = nepse
 
@@ -27,6 +29,77 @@ class TokenManager:
             else False
         )
 
+    def __repr__(self):
+        return (
+            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nSalts: {self.salts}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
+            if self.access_token is not None
+            else "Token Manager Not Initialized"
+        )
+
+    def _getValidTokenFromJSON(self, token_response):
+        salts = []
+
+        for salt_index in range(1, 6):
+            val = int(token_response[f"salt{salt_index}"])
+            salts.append(val)
+
+        return (
+            *self.token_parser.parse_token_response(token_response),
+            int(token_response["serverTime"] / 1000),
+            salts,
+        )
+
+
+class AsyncTokenManager(_TokenManager):
+    def __init__(self, nepse):
+        super().__init__(nepse)
+
+        self.update_started = asyncio.Event()
+        self.update_completed = asyncio.Event()
+
+    async def getAccessToken(self):
+        if self.isTokenValid():
+            return self.access_token
+        else:
+            await self.update()
+            return self.access_token
+
+    async def getRefreshToken(self):
+        if self.isTokenValid():
+            return self.access_token
+        else:
+            await self.update()
+            return self.refresh_token
+
+    async def update(self):
+        await self._setToken()
+
+    async def _setToken(self):
+        if not self.update_started.is_set():
+            self.update_started.set()
+            self.update_completed.clear()
+            json_response = await self._getTokenHttpRequest()
+            (
+                self.access_token,
+                self.refresh_token,
+                self.token_time_stamp,
+                self.salts,
+            ) = self._getValidTokenFromJSON(json_response)
+            self.update_completed.set()
+            self.update_started.clear()
+        else:
+            await self.update_completed.wait()
+
+    async def _getTokenHttpRequest(self):
+        return await self.nepse.requestGETAPI(
+            url=self.token_url, include_authorization_headers=False
+        )
+
+
+class TokenManager(_TokenManager):
+    def __init__(self, nepse):
+        super().__init__(nepse)
+
     def getAccessToken(self):
         return (
             self.access_token
@@ -43,13 +116,6 @@ class TokenManager:
 
     def update(self):
         self._setToken()
-
-    def __repr__(self):
-        return (
-            f"Access Token: {self.access_token}\nRefresh Token: {self.refresh_token}\nSalts: {self.salts}\nTimeStamp: {datetime.fromtimestamp(self.token_time_stamp).strftime('%Y-%m-%d %H:%M:%S')}"
-            if self.access_token is not None
-            else "Token Manager Not Initialized"
-        )
 
     def _setToken(self):
         json_response = self._getTokenHttpRequest()
