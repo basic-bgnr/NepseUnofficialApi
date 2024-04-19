@@ -7,13 +7,12 @@ import httpx
 import pathlib
 
 
-class Nepse:
-    def __init__(self):
-        # internal flag to set tls verification true or false during http request
-        self.init_client(tls_verify=True)
+class _Nepse:
+    def __init__(self, token_manager, dummy_id_manager):
 
-        self.token_manager = TokenManager(self)
-        self.dummy_id_manager = DummyIDManager(
+        self.token_manager = token_manager(self)
+
+        self.dummy_id_manager = dummy_id_manager(
             market_status_function=self.getMarketStatus,
             date_function=datetime.now,
         )
@@ -92,11 +91,15 @@ class Nepse:
             return self.requestPOSTAPI(url, payload_generator)
 
     ##################method to get post payload id#################################33
+class Nepse(_Nepse):
+    def __init__(self):
+        super().__init__(TokenManager, DummyIDManager)
+        # internal flag to set tls verification true or false during http request
+        self.init_client(tls_verify=True)
+
+    ###############################################PRIVATE METHODS###############################################
     def getDummyID(self):
         return self.dummy_id_manager.getDummyID()
-
-    def getDummyData(self):
-        return self.dummy_data
 
     def getPOSTPayloadIDForScrips(self):
         dummy_id = self.getDummyID()
@@ -121,16 +124,53 @@ class Nepse:
         )
         return post_payload_id
 
-    ###############################################PUBLIC METHODS###############################################
+    def getAuthorizationHeaders(self):
+        headers = self.headers
+        access_token = self.token_manager.getAccessToken()
+
+        headers = {
+            "Authorization": f"Salter {access_token}",
+            "Content-Type": "application/json",
+            **self.headers,
+        }
+
+        return headers
+
     def init_client(self, tls_verify):
         # limits prevent rate limit imposed by nepse
         limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
         self.client = httpx.Client(verify=tls_verify, limits=limits, http2=True)
 
-    def setTLSVerification(self, flag):
-        self._tls_verify = flag
-        self.init_client(self._tls_verify)
+    def requestGETAPI(self, url, include_authorization_headers=True):
+        try:
+            response = self.client.get(
+                self.get_full_url(api_url=url),
+                headers=(
+                    self.getAuthorizationHeaders()
+                    if include_authorization_headers
+                    else self.headers
+                ),
+            )
+            return response.json() if response.text else {}
+        except json.JSONDecodeError:
+            return {}
+        except httpx.RemoteProtocolError:
+            return self.requestGETAPI(url, include_authorization_headers)
 
+    def requestPOSTAPI(self, url, payload_generator):
+        try:
+            response = self.client.post(
+                self.get_full_url(api_url=url),
+                headers=self.getAuthorizationHeaders(),
+                data=json.dumps({"id": payload_generator()}),
+            )
+            return response.json() if response.text else {}
+        except json.JSONDecodeError:
+            return {}
+        except httpx.RemoteProtocolError:
+            return self.requestPOSTAPI(url, payload_generator)
+
+    ###############################################PUBLIC METHODS###############################################
     def getMarketStatus(self):
         return self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
 
