@@ -401,7 +401,7 @@ class Nepse(_Nepse):
         return floor_sheets
 
 
-class DummyIDManager:
+class _DummyIDManager:
     def __init__(self, market_status_function=None, date_function=datetime.now):
         self.data = None
         self.dummy_id = None
@@ -416,6 +416,17 @@ class DummyIDManager:
     def setMarketStatusFunction(self, func):
         self.market_status_function = func
         self.data = None
+
+    def convertToDateTime(self, date_time_str):
+        return datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
+
+    def __repr__(self):
+        return f"<Dummy ID: {self.dummy_id}, Date: {self.date_stamp}>"
+
+
+class DummyIDManager(_DummyIDManager):
+    def __init__(self, market_status_function=None, date_function=datetime.now):
+        super().__init__(market_status_function, date_function)
 
     def populateData(self, force=False):
         today = self.date_function()
@@ -446,15 +457,9 @@ class DummyIDManager:
                 self.dummy_id = self.data["id"]
                 self.date_stamp = today
 
-    def convertToDateTime(self, date_time_str):
-        return datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
-
     def getDummyID(self):
         self.populateData()
         return self.dummy_id
-
-    def __repr__(self):
-        return f"<Dummy ID: {self.dummy_id}, Date: {self.date_stamp}>"
 
 
 def testDummyManager():
