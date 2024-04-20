@@ -263,7 +263,8 @@ class AsyncNepse(_Nepse):
 
     def init_client(self, tls_verify):
         # limits prevent rate limit imposed by nepse
-        limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
+        # (setting connection > 2, raises protocol error, so the following value is used as default)
+        limits = httpx.Limits(max_keepalive_connections=2, max_connections=2)
         self.client = httpx.AsyncClient(
             verify=tls_verify, limits=limits, http2=False, timeout=100
         )
