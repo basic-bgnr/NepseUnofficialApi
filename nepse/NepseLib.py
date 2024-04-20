@@ -265,7 +265,7 @@ class AsyncNepse(_Nepse):
         # limits prevent rate limit imposed by nepse
         limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
         self.client = httpx.AsyncClient(
-            verify=tls_verify, limits=limits, http2=False, timeout=10
+            verify=tls_verify, limits=limits, http2=False, timeout=100
         )
 
     async def requestGETAPI(self, url, include_authorization_headers=True):
@@ -449,7 +449,9 @@ class Nepse(_Nepse):
     def init_client(self, tls_verify):
         # limits prevent rate limit imposed by nepse
         limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
-        self.client = httpx.Client(verify=tls_verify, limits=limits, http2=True)
+        self.client = httpx.Client(
+            verify=tls_verify, limits=limits, http2=True, timeout=100
+        )
 
     def requestGETAPI(self, url, include_authorization_headers=True):
         try:
