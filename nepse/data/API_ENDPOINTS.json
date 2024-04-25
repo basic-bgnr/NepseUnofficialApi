@@ -31,7 +31,7 @@
     "trading_sub_index_graph": "/api/nots/graph/index/61",
     "company_daily_graph": "/api/nots/market/graphdata/daily/",
     "company_details": "/api/nots/security/",
-    "company_price_volume_history": "/api/nots/market/graphdata/",
+    "company_price_volume_history": "/api/nots/market/history/security/",
     "company_floorsheet": "/api/nots/security/floorsheet/",
     "floor_sheet": "/api/nots/nepse-data/floorsheet",
     "todays_price": "/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06"
