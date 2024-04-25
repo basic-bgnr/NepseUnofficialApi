@@ -1,7 +1,7 @@
 from nepse.TokenUtils import TokenManager, AsyncTokenManager
 from nepse.DummyIDUtils import DummyIDManager, AsyncDummyIDManager
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from tqdm import tqdm
 import asyncio
@@ -314,6 +314,16 @@ class AsyncNepse(_Nepse):
             }
         return self.company_symbol_id_keymap
 
+    async def getCompanyPriceVolumeHistory(
+        self, symbol, start_date=None, end_date=None
+    ):
+        end_date = end_date if end_date else date.today()
+        start_date = start_date if start_date else (end_date - timedelta(days=365))
+        symbol = symbol.upper()
+        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
+        return await self.requestGETAPI(url=url)
+
     # api requiring post method
     async def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
@@ -328,14 +338,6 @@ class AsyncNepse(_Nepse):
         company_id = (await self.getCompanyIDKeyMap())[symbol]
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
-            payload_generator=self.getPOSTPayloadIDForScrips,
-        )
-
-    async def getCompanyPriceVolumeHistory(self, symbol):
-        symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
-        return await self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
@@ -484,6 +486,7 @@ class Nepse(_Nepse):
             return self.requestPOSTAPI(url, payload_generator)
 
     ###############################################PUBLIC METHODS###############################################
+    #####api requiring get method
     def getCompanyList(self):
         self.company_list = self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
@@ -497,6 +500,14 @@ class Nepse(_Nepse):
                 company["symbol"]: company["id"] for company in company_list
             }
         return self.company_symbol_id_keymap
+
+    def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
+        end_date = end_date if end_date else date.today()
+        start_date = start_date if start_date else (end_date - timedelta(days=365))
+        symbol = symbol.upper()
+        company_id = self.getCompanyIDKeyMap()[symbol]
+        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
+        return self.requestGETAPI(url=url)
 
     #####api requiring post method
     def getDailyScripPriceGraph(self, symbol):
@@ -515,13 +526,13 @@ class Nepse(_Nepse):
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getCompanyPriceVolumeHistory(self, symbol):
+    def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
+        end_date = end_date if end_date else date.today()
+        start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
-        return self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
-            payload_generator=self.getPOSTPayloadIDForScrips,
-        )
+        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
+        return self.requestGETAPI(url=url)
 
     def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
