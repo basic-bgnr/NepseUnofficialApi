@@ -322,7 +322,7 @@ class AsyncNepse(_Nepse):
         symbol = symbol.upper()
         company_id = (await self.getCompanyIDKeyMap())[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
-        return await self.requestGETAPI(url=url)
+        return (await self.requestGETAPI(url=url))["content"]
 
     # api requiring post method
     async def getDailyScripPriceGraph(self, symbol):
@@ -532,7 +532,7 @@ class Nepse(_Nepse):
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
-        return self.requestGETAPI(url=url)
+        return self.requestGETAPI(url=url)["content"]
 
     def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
