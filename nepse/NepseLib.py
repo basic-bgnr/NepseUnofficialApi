@@ -2,6 +2,7 @@ from nepse.TokenUtils import TokenManager, AsyncTokenManager
 from nepse.DummyIDUtils import DummyIDManager, AsyncDummyIDManager
 
 from datetime import date, datetime, timedelta
+from collections import defaultdict
 
 from tqdm import tqdm
 import asyncio
@@ -22,6 +23,7 @@ class _Nepse:
 
         self.company_symbol_id_keymap = None
         self.company_list = None
+        self.sector_scrips = None
 
         self.floor_sheet_size = 500
 
@@ -306,6 +308,20 @@ class AsyncNepse(_Nepse):
         )
         return self.company_list
 
+    async def getSectorScrips(self):
+        if self.sector_scrips is None:
+            company_info_list = await self.getCompanyList()
+
+            sector_scrips = defaultdict(list)
+            for company_info in company_info_list:
+                sector_name = company_info["sectorName"]
+                scrip_name = company_info["symbol"]
+
+                sector_scrips[sector_name].append(scrip_name)
+            self.sector_scrips = dict(sector_scrips)
+
+        return self.sector_scrips
+
     async def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
             company_list = await self.getCompanyList()
@@ -492,6 +508,20 @@ class Nepse(_Nepse):
             url=self.api_end_points["company_list_url"]
         )
         return self.company_list
+
+    def getSectorScrips(self):
+        if self.sector_scrips is None:
+            company_info_list = self.getCompanyList()
+
+            sector_scrips = defaultdict(list)
+            for company_info in company_info_list:
+                sector_name = company_info["sectorName"]
+                scrip_name = company_info["symbol"]
+
+                sector_scrips[sector_name].append(scrip_name)
+            self.sector_scrips = dict(sector_scrips)
+
+        return self.sector_scrips
 
     def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
