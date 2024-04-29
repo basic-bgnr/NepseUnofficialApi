@@ -306,7 +306,8 @@ class AsyncNepse(_Nepse):
         self.company_list = await self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
         )
-        return self.company_list
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.company_list)
 
     async def getSectorScrips(self):
         if self.sector_scrips is None:
@@ -320,7 +321,8 @@ class AsyncNepse(_Nepse):
                 sector_scrips[sector_name].append(scrip_name)
             self.sector_scrips = dict(sector_scrips)
 
-        return self.sector_scrips
+        # return a copy of self.sector_scrips so than changes after return are not perisistent
+        return dict(self.sector_scrips)
 
     async def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
@@ -507,7 +509,8 @@ class Nepse(_Nepse):
         self.company_list = self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
         )
-        return self.company_list
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.company_list)
 
     def getSectorScrips(self):
         if self.sector_scrips is None:
@@ -520,8 +523,8 @@ class Nepse(_Nepse):
 
                 sector_scrips[sector_name].append(scrip_name)
             self.sector_scrips = dict(sector_scrips)
-
-        return self.sector_scrips
+        # return a copy of self.sector_scrips so than changes after return are not perisistent
+        return dict(self.sector_scrips)
 
     def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
