@@ -12,6 +12,7 @@
     "nepse_index_url": "/api/nots/nepse-index",
     "nepse_subindices_url": "/api/nots",
     "company_list_url": "/api/nots/company/list",
+    "security_list_url": "/api/nots/security?nonDelisted=true",
     "nepse_index_daily_graph": "/api/nots/graph/index/58",
     "sensitive_index_daily_graph": "/api/nots/graph/index/57",
     "float_index_daily_graph": "/api/nots/graph/index/62",
