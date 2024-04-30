@@ -118,6 +118,12 @@ class _Nepse:
         return self.requestGETAPI(url=self.api_end_points["nepse_subindices_url"])
 
     #####api requiring post method
+    def getPriceVolumeHistory(self, business_date=None):
+        url = f"{self.api_end_points['todays_price']}?&size=500&businessDate={business_date}"
+        return self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
+
     def getDailyNepseIndexGraph(self):
         return self.requestPOSTAPI(
             url=self.api_end_points["nepse_index_daily_graph"],
