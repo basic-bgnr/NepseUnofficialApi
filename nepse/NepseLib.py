@@ -21,8 +21,14 @@ class _Nepse:
             date_function=datetime.now,
         )
 
+        # list of all company that were listed in nepse (including delisted but doesn't include promoter shares)
         self.company_symbol_id_keymap = None
+        # list of all valid company that are not delisted (includes promoter share)
+        self.security_symbol_id_keymap = None
+
         self.company_list = None
+        self.security_list = None
+
         self.sector_scrips = None
 
         self.floor_sheet_size = 500
