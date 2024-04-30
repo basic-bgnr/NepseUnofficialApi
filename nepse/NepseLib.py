@@ -365,14 +365,14 @@ class AsyncNepse(_Nepse):
         end_date = end_date if end_date else date.today()
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return (await self.requestGETAPI(url=url))["content"]
 
     # api requiring post method
     async def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -380,7 +380,7 @@ class AsyncNepse(_Nepse):
 
     async def getCompanyDetails(self, symbol):
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -430,7 +430,7 @@ class AsyncNepse(_Nepse):
     async def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
@@ -587,14 +587,14 @@ class Nepse(_Nepse):
         end_date = end_date if end_date else date.today()
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return self.requestGETAPI(url=url)
 
     #####api requiring post method
     def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -602,7 +602,7 @@ class Nepse(_Nepse):
 
     def getCompanyDetails(self, symbol):
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -628,7 +628,7 @@ class Nepse(_Nepse):
     def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
