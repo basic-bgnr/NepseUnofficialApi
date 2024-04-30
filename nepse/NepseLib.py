@@ -608,14 +608,6 @@ class Nepse(_Nepse):
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
-        end_date = end_date if end_date else date.today()
-        start_date = start_date if start_date else (end_date - timedelta(days=365))
-        symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
-        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
-        return self.requestGETAPI(url=url)["content"]
-
     def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
