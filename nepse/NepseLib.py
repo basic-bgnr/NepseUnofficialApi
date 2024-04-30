@@ -315,6 +315,13 @@ class AsyncNepse(_Nepse):
         # return a copy of self.company_list so than changes after return are not perisistent
         return list(self.company_list)
 
+    async def getSecurityList(self):
+        self.security_list = await self.requestGETAPI(
+            url=self.api_end_points["security_list_url"]
+        )
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.security_list)
+
     async def getSectorScrips(self):
         if self.sector_scrips is None:
             company_info_list = await self.getCompanyList()
@@ -337,6 +344,14 @@ class AsyncNepse(_Nepse):
                 company["symbol"]: company["id"] for company in company_list
             }
         return self.company_symbol_id_keymap
+
+    async def getSecurityIDKeyMap(self, force_update=False):
+        if self.security_symbol_id_keymap is None or force_update:
+            security_list = await self.getSecurityList()
+            self.security_symbol_id_keymap = {
+                security["symbol"]: security["id"] for security in security_list
+            }
+        return self.security_symbol_id_keymap
 
     async def getCompanyPriceVolumeHistory(
         self, symbol, start_date=None, end_date=None
@@ -518,6 +533,13 @@ class Nepse(_Nepse):
         # return a copy of self.company_list so than changes after return are not perisistent
         return list(self.company_list)
 
+    def getSecurityList(self):
+        self.security_list = self.requestGETAPI(
+            url=self.api_end_points["security_list_url"]
+        )
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.security_list)
+
     def getSectorScrips(self):
         if self.sector_scrips is None:
             company_info_list = self.getCompanyList()
@@ -539,6 +561,14 @@ class Nepse(_Nepse):
                 company["symbol"]: company["id"] for company in company_list
             }
         return self.company_symbol_id_keymap
+
+    def getSecurityIDKeyMap(self, force_update=False):
+        if self.security_symbol_id_keymap is None or force_update:
+            security_list = self.getSecurityList()
+            self.security_symbol_id_keymap = {
+                security["symbol"]: security["id"] for security in security_list
+            }
+        return self.security_symbol_id_keymap
 
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
         end_date = end_date if end_date else date.today()
