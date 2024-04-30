@@ -324,16 +324,22 @@ class AsyncNepse(_Nepse):
 
     async def getSectorScrips(self):
         if self.sector_scrips is None:
-            company_info_list = await self.getCompanyList()
-
+            company_info_dict = {
+                company_info["symbol"]: company_info
+                for company_info in (await self.getCompanyList())
+            }
             sector_scrips = defaultdict(list)
-            for company_info in company_info_list:
-                sector_name = company_info["sectorName"]
-                scrip_name = company_info["symbol"]
 
-                sector_scrips[sector_name].append(scrip_name)
+            for security_info in await self.getSecurityList():
+                symbol = security_info["symbol"]
+                if company_info_dict.get(symbol):
+                    company_info = company_info_dict[symbol]
+                    sector_name = company_info["sectorName"]
+                    sector_scrips[sector_name].append(symbol)
+                else:
+                    sector_scrips["Promoter Share"].append(symbol)
+
             self.sector_scrips = dict(sector_scrips)
-
         # return a copy of self.sector_scrips so than changes after return are not perisistent
         return dict(self.sector_scrips)
 
@@ -542,14 +548,21 @@ class Nepse(_Nepse):
 
     def getSectorScrips(self):
         if self.sector_scrips is None:
-            company_info_list = self.getCompanyList()
-
+            company_info_dict = {
+                company_info["symbol"]: company_info
+                for company_info in self.getCompanyList()
+            }
             sector_scrips = defaultdict(list)
-            for company_info in company_info_list:
-                sector_name = company_info["sectorName"]
-                scrip_name = company_info["symbol"]
 
-                sector_scrips[sector_name].append(scrip_name)
+            for security_info in self.getSecurityList():
+                symbol = security_info["symbol"]
+                if company_info_dict.get(symbol):
+                    company_info = company_info_dict[symbol]
+                    sector_name = company_info["sectorName"]
+                    sector_scrips[sector_name].append(symbol)
+                else:
+                    sector_scrips["Promoter Share"].append(symbol)
+
             self.sector_scrips = dict(sector_scrips)
         # return a copy of self.sector_scrips so than changes after return are not perisistent
         return dict(self.sector_scrips)
