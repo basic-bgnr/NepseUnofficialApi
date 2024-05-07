@@ -294,8 +294,6 @@ class AsyncNepse(_Nepse):
                 ),
             )
             return response.json() if response.text else {}
-        except json.JSONDecodeError:
-            return {}
         except httpx.RemoteProtocolError:
             return await self.requestGETAPI(url, include_authorization_headers)
 
@@ -307,8 +305,6 @@ class AsyncNepse(_Nepse):
                 data=json.dumps({"id": await payload_generator()}),
             )
             return response.json() if response.text else {}
-        except json.JSONDecodeError:
-            return {}
         except httpx.RemoteProtocolError:
             return await self.requestPOSTAPI(url, payload_generator)
 
@@ -518,8 +514,6 @@ class Nepse(_Nepse):
                 ),
             )
             return response.json() if response.text else {}
-        except json.JSONDecodeError:
-            return {}
         except httpx.RemoteProtocolError:
             return self.requestGETAPI(url, include_authorization_headers)
 
@@ -531,8 +525,6 @@ class Nepse(_Nepse):
                 data=json.dumps({"id": payload_generator()}),
             )
             return response.json() if response.text else {}
-        except json.JSONDecodeError:
-            return {}
         except httpx.RemoteProtocolError:
             return self.requestPOSTAPI(url, payload_generator)
 
