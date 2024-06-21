@@ -29,7 +29,7 @@ class Nepse:
         self.load_json_dummy_data()
         self.load_json_header()
 
-    ###############################################PRIVATE METHODS###############################################
+    ############################################### PRIVATE METHODS###############################################
     def load_json_header(self):
         json_file_path = f"{pathlib.Path(__file__).parent}/data/HEADERS.json"
         with open(json_file_path, "r") as json_file:
@@ -38,7 +38,8 @@ class Nepse:
             self.headers["Referer"] = self.base_url.replace("https://", "")
 
     def load_json_api_end_points(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/data/API_ENDPOINTS.json"
+        json_file_path = f"{pathlib.Path(
+            __file__).parent}/data/API_ENDPOINTS.json"
         with open(json_file_path, "r") as json_file:
             self.api_end_points = json.load(json_file)
 
@@ -46,7 +47,8 @@ class Nepse:
         return f"{self.base_url}{api_url}"
 
     def load_json_dummy_data(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/data/DUMMY_DATA.json"
+        json_file_path = f"{pathlib.Path(
+            __file__).parent}/data/DUMMY_DATA.json"
         with open(json_file_path, "r") as json_file:
             self.dummy_data = json.load(json_file)
 
@@ -91,7 +93,7 @@ class Nepse:
         except httpx.RemoteProtocolError:
             return self.requestPOSTAPI(url, payload_generator)
 
-    ##################method to get post payload id#################################33
+    # method to get post payload id#################################33
     def getDummyID(self):
         return self.dummy_id_manager.getDummyID()
 
@@ -107,7 +109,8 @@ class Nepse:
         e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
-            + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
+            + self.token_manager.salts[3 if e %
+                                       10 < 5 else 1] * date.today().day
             - self.token_manager.salts[(3 if e % 10 < 5 else 1) - 1]
         )
         return post_payload_id
@@ -116,16 +119,18 @@ class Nepse:
         e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
-            + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
+            + self.token_manager.salts[1 if e %
+                                       10 < 4 else 3] * date.today().day
             - self.token_manager.salts[(1 if e % 10 < 4 else 3) - 1]
         )
         return post_payload_id
 
-    ###############################################PUBLIC METHODS###############################################
+    ############################################### PUBLIC METHODS###############################################
     def init_client(self, tls_verify):
         # limits prevent rate limit imposed by nepse
         limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
-        self.client = httpx.Client(verify=tls_verify, limits=limits, http2=True)
+        self.client = httpx.Client(
+            verify=tls_verify, limits=limits, http2=True)
 
     def setTLSVerification(self, flag):
         self._tls_verify = flag
@@ -181,7 +186,10 @@ class Nepse:
             }
         return self.company_symbol_id_keymap
 
-    #####api requiring post method
+    def getLiveMarket(self):
+        return self.requestGETAPI(url=self.api_end_points["live-market"])
+
+    # api requiring post method
     def getDailyNepseIndexGraph(self):
         return self.requestPOSTAPI(
             url=self.api_end_points["nepse_index_daily_graph"],
@@ -304,18 +312,21 @@ class Nepse:
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         return self.requestPOSTAPI(
-            url=f"{self.api_end_points['company_price_volume_history']}{company_id}",
+            url=f"{self.api_end_points['company_price_volume_history']}{
+                company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
     def getFloorSheet(self, show_progress=False):
-        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+        url = f"{self.api_end_points['floor_sheet']}?&size={
+            self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
+        page_range = tqdm(range(1, max_page)
+                          ) if show_progress else range(1, max_page)
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
@@ -330,9 +341,11 @@ class Nepse:
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         business_date = (
-            date.fromisoformat(f"{business_date}") if business_date else date.today()
+            date.fromisoformat(
+                f"{business_date}") if business_date else date.today()
         )
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
+            business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -439,10 +452,10 @@ def testDummyManager():
             "id": 82,
         }
 
-    today_friday = lambda: datetime(2023, 9, 28)
-    today_saturday = lambda: datetime(2023, 9, 29)
-    today_sunday = lambda: datetime(2023, 10, 1)
-    today_monday = lambda: datetime(2023, 10, 2)
+    def today_friday(): return datetime(2023, 9, 28)
+    def today_saturday(): return datetime(2023, 9, 29)
+    def today_sunday(): return datetime(2023, 10, 1)
+    def today_monday(): return datetime(2023, 10, 2)
 
     dummy_manager = DummyIDManager()
 

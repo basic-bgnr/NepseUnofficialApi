@@ -32,6 +32,7 @@ routes = {
     "DailyScripPriceGraph": "/DailyScripPriceGraph",
     "CompanyList": "/CompanyList",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
+    "LiveMarket": "/LiveMarket",
 }
 
 
@@ -165,11 +166,20 @@ def getPriceVolume():
     return response
 
 
+@app.route(routes["LiveMarket"])
+def getLiveMarket():
+    response = flask.jsonify(nepse.getLiveMarket())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+
 @app.route(routes["TradeTurnoverTransactionSubindices"])
 def getTradeTurnoverTransactionSubindices():
-    companies = {company["symbol"]: company for company in nepse.getCompanyList()}
+    companies = {company["symbol"]
+        : company for company in nepse.getCompanyList()}
     turnover = {obj["symbol"]: obj for obj in nepse.getTopTenTurnoverScrips()}
-    transaction = {obj["symbol"]: obj for obj in nepse.getTopTenTransactionScrips()}
+    transaction = {obj["symbol"]
+        : obj for obj in nepse.getTopTenTransactionScrips()}
     trade = {obj["symbol"]: obj for obj in nepse.getTopTenTradeScrips()}
 
     gainers = {obj["symbol"]: obj for obj in nepse.getTopGainers()}
