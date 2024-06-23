@@ -46,5 +46,4 @@ version = {attr = "nepse.__version__"}
 line-length = 88
 target-version = ['py38']
 color = true
-diff = true
 verbose = true
