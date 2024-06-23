@@ -35,5 +35,6 @@
   "company_price_volume_history": "/api/nots/market/history/security/",
   "company_floorsheet": "/api/nots/security/floorsheet/",
   "floor_sheet": "/api/nots/nepse-data/floorsheet",
-  "todays_price": "/api/nots/nepse-data/today-price"
+  "todays_price": "/api/nots/nepse-data/today-price",
+  "live-market": "/api/nots/lives-market"
 }
