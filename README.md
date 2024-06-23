@@ -77,6 +77,7 @@ pip uninstall nepse
 # Development
 1. [Jun 23, 2024]
    * Merged Async Feature to master branch
+   * PR #11 (@iamaakashbasnet) merged to master (enables access to live-market api endpoint)
 2. [Apr 19, 2024]
    * Added Async Feature to Nepse through `AsyncNepse` class
 3. [Apr 14, 2024]
