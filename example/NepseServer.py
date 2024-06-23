@@ -33,6 +33,7 @@ routes = {
     "CompanyList": "/CompanyList",
     "SecurityList": "/SecurityList",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
+    "LiveMarket": "/LiveMarket",
 }
 
 
@@ -169,6 +170,13 @@ def getSecurityList():
 @app.route(routes["PriceVolume"])
 def getPriceVolume():
     response = flask.jsonify(nepse.getPriceVolume())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+
+@app.route(routes["LiveMarket"])
+def getLiveMarket():
+    response = flask.jsonify(nepse.getLiveMarket())
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

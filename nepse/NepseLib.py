@@ -39,7 +39,7 @@ class _Nepse:
         self.load_json_dummy_data()
         self.load_json_header()
 
-    ###############################################PRIVATE METHODS###############################################
+    ############################################### PRIVATE METHODS###############################################
     def getDummyID(self):
         return self.dummy_id_manager.getDummyID()
 
@@ -51,7 +51,8 @@ class _Nepse:
             self.headers["Referer"] = self.base_url.replace("https://", "")
 
     def load_json_api_end_points(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/data/API_ENDPOINTS.json"
+        json_file_path = f"{pathlib.Path(
+            __file__).parent}/data/API_ENDPOINTS.json"
         with open(json_file_path, "r") as json_file:
             self.api_end_points = json.load(json_file)
 
@@ -59,7 +60,8 @@ class _Nepse:
         return f"{self.base_url}{api_url}"
 
     def load_json_dummy_data(self):
-        json_file_path = f"{pathlib.Path(__file__).parent}/data/DUMMY_DATA.json"
+        json_file_path = f"{pathlib.Path(
+            __file__).parent}/data/DUMMY_DATA.json"
         with open(json_file_path, "r") as json_file:
             self.dummy_data = json.load(json_file)
 
@@ -75,12 +77,12 @@ class _Nepse:
     def requestPOSTAPI(url, payload_generator):
         pass
 
-    ###############################################PUBLIC METHODS###############################################
+    ############################################### PUBLIC METHODS###############################################
     def setTLSVerification(self, flag):
         self._tls_verify = flag
         self.init_client(tls_verify=flag)
 
-    #####api requiring get method
+    # api requiring get method
     def getMarketStatus(self):
         return self.requestGETAPI(url=self.api_end_points["nepse_open_url"])
 
@@ -117,9 +119,13 @@ class _Nepse:
     def getNepseSubIndices(self):
         return self.requestGETAPI(url=self.api_end_points["nepse_subindices_url"])
 
-    #####api requiring post method
+    def getLiveMarket(self):
+        return self.requestGETAPI(url=self.api_end_points["live-market"])
+
+    # api requiring post method
     def getPriceVolumeHistory(self, business_date=None):
-        url = f"{self.api_end_points['todays_price']}?&size=500&businessDate={business_date}"
+        url = f"{self.api_end_points['todays_price']
+                 }?&size=500&businessDate={business_date}"
         return self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -233,7 +239,7 @@ class AsyncNepse(_Nepse):
         # internal flag to set tls verification true or false during http request
         self.init_client(tls_verify=True)
 
-    ###############################################PRIVATE METHODS###############################################
+    ############################################### PRIVATE METHODS###############################################
     async def getPOSTPayloadIDForScrips(self):
         dummy_id = await self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
@@ -308,7 +314,7 @@ class AsyncNepse(_Nepse):
         except httpx.RemoteProtocolError:
             return await self.requestPOSTAPI(url, payload_generator)
 
-    ###############################################PUBLIC METHODS###############################################
+    ############################################### PUBLIC METHODS###############################################
     # api requiring get method
     async def getCompanyList(self):
         self.company_list = await self.requestGETAPI(
@@ -368,7 +374,8 @@ class AsyncNepse(_Nepse):
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
         company_id = (await self.getSecurityIDKeyMap())[symbol]
-        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
+        url = f"{self.api_end_points['company_price_volume_history']}{
+            company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return (await self.requestGETAPI(url=url))["content"]
 
     # api requiring post method
@@ -390,7 +397,8 @@ class AsyncNepse(_Nepse):
 
     async def getFloorSheet(self, show_progress=False):
 
-        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+        url = f"{self.api_end_points['floor_sheet']}?&size={
+            self.floor_sheet_size}&sort=contractId,desc"
         sheet = await self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -436,7 +444,8 @@ class AsyncNepse(_Nepse):
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
+            business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = await self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -460,7 +469,7 @@ class Nepse(_Nepse):
         # internal flag to set tls verification true or false during http request
         self.init_client(tls_verify=True)
 
-    ###############################################PRIVATE METHODS###############################################
+    ############################################### PRIVATE METHODS###############################################
     def getPOSTPayloadIDForScrips(self):
         dummy_id = self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
@@ -528,8 +537,8 @@ class Nepse(_Nepse):
         except httpx.RemoteProtocolError:
             return self.requestPOSTAPI(url, payload_generator)
 
-    ###############################################PUBLIC METHODS###############################################
-    #####api requiring get method
+    ############################################### PUBLIC METHODS###############################################
+    # api requiring get method
     def getCompanyList(self):
         self.company_list = self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
@@ -586,10 +595,11 @@ class Nepse(_Nepse):
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
         company_id = self.getSecurityIDKeyMap()[symbol]
-        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
+        url = f"{self.api_end_points['company_price_volume_history']}{
+            company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return self.requestGETAPI(url=url)
 
-    #####api requiring post method
+    # api requiring post method
     def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
         company_id = self.getSecurityIDKeyMap()[symbol]
@@ -607,7 +617,8 @@ class Nepse(_Nepse):
         )
 
     def getFloorSheet(self, show_progress=False):
-        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+        url = f"{self.api_end_points['floor_sheet']}?&size={
+            self.floor_sheet_size}&sort=contractId,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -630,7 +641,8 @@ class Nepse(_Nepse):
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
+            business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
