@@ -12,6 +12,7 @@
     "nepse_index_url": "/api/nots/nepse-index",
     "nepse_subindices_url": "/api/nots",
     "company_list_url": "/api/nots/company/list",
+    "security_list_url": "/api/nots/security?nonDelisted=true",
     "nepse_index_daily_graph": "/api/nots/graph/index/58",
     "sensitive_index_daily_graph": "/api/nots/graph/index/57",
     "float_index_daily_graph": "/api/nots/graph/index/62",
@@ -31,8 +32,8 @@
     "trading_sub_index_graph": "/api/nots/graph/index/61",
     "company_daily_graph": "/api/nots/market/graphdata/daily/",
     "company_details": "/api/nots/security/",
-    "company_price_volume_history": "/api/nots/market/graphdata/",
+    "company_price_volume_history": "/api/nots/market/history/security/",
     "company_floorsheet": "/api/nots/security/floorsheet/",
     "floor_sheet": "/api/nots/nepse-data/floorsheet",
-    "todays_price": "/api/nots/nepse-data/today-price?&size=20&securityId=2742&businessDate=2022-01-06"
+    "todays_price": "/api/nots/nepse-data/today-price"
 }
