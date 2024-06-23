@@ -75,30 +75,32 @@ pip uninstall nepse
 ```
 
 # Development
-1. [Apr 19, 2024]
+1. [Jun 23, 2024]
+   * Merged Async Feature to master branch
+2. [Apr 19, 2024]
    * Added Async Feature to Nepse through `AsyncNepse` class
-2. [Apr 14, 2024]
+3. [Apr 14, 2024]
    * Added new cmd-line flag [--version]
-3. [Apr 11, 2024]
+4. [Apr 11, 2024]
    * Added new cmd-line flag [--to-csv]
    * removed bug on empty argument to nepse-cli
-4. [Apr 10, 2024]
+5. [Apr 10, 2024]
    * Handled httpx.RemoteProtocolError when sending multiple request to nepse's server.
    * Added new cmd-line flags [--get-floorsheet, --output-file]
-5. [Apr 09, 2024]
+6. [Apr 09, 2024]
    * APIs now make use of HTTP2 request to nepse's server
    * Added tool `nepse-cli` which can be directly used from the terminal after installing the package
-6. [Apr 08, 2024]
+7. [Apr 08, 2024]
    * APIs can now be called without rate limitation or raising Exception (no need to add delay between API calls),
    * Speed Improvement ( getFloorSheet() and getFloorSheetOf() calls are ~3 times faster)
-7. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
-8. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
-9.  [Mar 23, 2024] add setup.py to ease installation process.
-10. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
-11. [Oct 10, 2023] Module(files, folders) restructuring
-12. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
-13. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
-14. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
+8. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
+9.  [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
+10. [Mar 23, 2024] add setup.py to ease installation process.
+11. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
+12. [Oct 10, 2023] Module(files, folders) restructuring
+13. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
+14. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
+15. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
 
 
 # Fix Details 
