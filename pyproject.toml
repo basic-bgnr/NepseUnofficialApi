@@ -48,4 +48,3 @@ target-version = ['py38']
 color = true
 diff = true
 verbose = true
-required-version = "24.3.0"
