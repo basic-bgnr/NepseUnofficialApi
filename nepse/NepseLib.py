@@ -251,8 +251,7 @@ class AsyncNepse(_Nepse):
         await self.token_manager.update_completed.wait()
         post_payload_id = (
             e
-            + self.token_manager.salts[3 if e %
-                                       10 < 5 else 1] * date.today().day
+            + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
             - self.token_manager.salts[(3 if e % 10 < 5 else 1) - 1]
         )
         return post_payload_id
@@ -265,8 +264,7 @@ class AsyncNepse(_Nepse):
 
         post_payload_id = (
             e
-            + self.token_manager.salts[1 if e %
-                                       10 < 4 else 3] * date.today().day
+            + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
             - self.token_manager.salts[(1 if e % 10 < 4 else 3) - 1]
         )
         return post_payload_id
@@ -373,8 +371,7 @@ class AsyncNepse(_Nepse):
         self, symbol, start_date=None, end_date=None
     ):
         end_date = end_date if end_date else date.today()
-        start_date = start_date if start_date else (
-            end_date - timedelta(days=365))
+        start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
         company_id = (await self.getSecurityIDKeyMap())[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{
@@ -445,8 +442,7 @@ class AsyncNepse(_Nepse):
         symbol = symbol.upper()
         company_id = (await self.getSecurityIDKeyMap())[symbol]
         business_date = (
-            date.fromisoformat(
-                f"{business_date}") if business_date else date.today()
+            date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
         url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
             business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
@@ -483,8 +479,7 @@ class Nepse(_Nepse):
         e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
-            + self.token_manager.salts[3 if e %
-                                       10 < 5 else 1] * date.today().day
+            + self.token_manager.salts[3 if e % 10 < 5 else 1] * date.today().day
             - self.token_manager.salts[(3 if e % 10 < 5 else 1) - 1]
         )
         return post_payload_id
@@ -493,8 +488,7 @@ class Nepse(_Nepse):
         e = self.getPOSTPayloadIDForScrips()
         post_payload_id = (
             e
-            + self.token_manager.salts[1 if e %
-                                       10 < 4 else 3] * date.today().day
+            + self.token_manager.salts[1 if e % 10 < 4 else 3] * date.today().day
             - self.token_manager.salts[(1 if e % 10 < 4 else 3) - 1]
         )
         return post_payload_id
@@ -598,8 +592,7 @@ class Nepse(_Nepse):
 
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
         end_date = end_date if end_date else date.today()
-        start_date = start_date if start_date else (
-            end_date - timedelta(days=365))
+        start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
         company_id = self.getSecurityIDKeyMap()[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{
@@ -631,8 +624,7 @@ class Nepse(_Nepse):
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = tqdm(range(1, max_page)
-                          ) if show_progress else range(1, max_page)
+        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
@@ -647,8 +639,7 @@ class Nepse(_Nepse):
         symbol = symbol.upper()
         company_id = self.getSecurityIDKeyMap()[symbol]
         business_date = (
-            date.fromisoformat(
-                f"{business_date}") if business_date else date.today()
+            date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
         url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
             business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
