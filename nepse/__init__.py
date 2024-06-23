@@ -1,4 +1,5 @@
 from nepse.NepseLib import Nepse
+from nepse.NepseLib import AsyncNepse
 
 
 # function added to reduce namespace pollution (importing datetime)
@@ -10,10 +11,11 @@ def timestamp(year, month, date):
 
 __all__ = [
     "Nepse",
+    "AsyncNepse",
 ]
 
-__version__ = "0.2.1"
-__release_date__ = timestamp(2024, 4, 19)
+__version__ = "0.3.1"
+__release_date__ = timestamp(2024, 6, 23)
 
 
 def main_cli():
@@ -179,6 +181,7 @@ def start_server():
         "DailyNepseIndexGraph": "/DailyNepseIndexGraph",
         "DailyScripPriceGraph": "/DailyScripPriceGraph",
         "CompanyList": "/CompanyList",
+        "SecurityList": "/SecurityList",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
     }
 
@@ -291,6 +294,12 @@ def start_server():
     @app.route(routes["CompanyList"])
     def getCompanyList():
         response = flask.jsonify(nepse.getCompanyList())
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    @app.route(routes["SecurityList"])
+    def getSecurityList():
+        response = flask.jsonify(nepse.getSecurityList())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 

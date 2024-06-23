@@ -20,11 +20,19 @@ pip install git+https://github.com/basic-bgnr/NepseUnofficialApi
 ```
 # How to use?
 ### A. API usage
+Blocking Nepse API Usage
 ```
 from nepse import Nepse
 nepse = Nepse()
 nepse.setTLSVerification(False) #This is temporary, until nepse sorts its ssl certificate problem
 nepse.getCompanyList()
+```
+Non-Blocking Nepse API Usage (use ipython or similar shell that allows await to be called on root)
+```
+from nepse import AsyncNepse 
+nepse = AsyncNepse()
+nepse.setTLSVerification(False) #This is temporary, until nepse sorts its ssl certificate problem
+await nepse.getCompanyList()
 ```
 ### B. Cli tool
 After installing the package, `nepse-cli` cmdline tool is available
@@ -67,28 +75,32 @@ pip uninstall nepse
 ```
 
 # Development
-1. [Apr 14, 2024]
+1. [Jun 23, 2024]
+   * Merged Async Feature to master branch
+2. [Apr 19, 2024]
+   * Added Async Feature to Nepse through `AsyncNepse` class
+3. [Apr 14, 2024]
    * Added new cmd-line flag [--version]
-2. [Apr 11, 2024]
+4. [Apr 11, 2024]
    * Added new cmd-line flag [--to-csv]
    * removed bug on empty argument to nepse-cli
-3. [Apr 10, 2024]
+5. [Apr 10, 2024]
    * Handled httpx.RemoteProtocolError when sending multiple request to nepse's server.
    * Added new cmd-line flags [--get-floorsheet, --output-file]
-4. [Apr 09, 2024]
+6. [Apr 09, 2024]
    * APIs now make use of HTTP2 request to nepse's server
    * Added tool `nepse-cli` which can be directly used from the terminal after installing the package
-5. [Apr 08, 2024]
+7. [Apr 08, 2024]
    * APIs can now be called without rate limitation or raising Exception (no need to add delay between API calls),
    * Speed Improvement ( getFloorSheet() and getFloorSheetOf() calls are ~3 times faster)
-6. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
-7. [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
-8. [Mar 23, 2024] add setup.py to ease installation process.
-9.  [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
-10. [Oct 10, 2023] Module(files, folders) restructuring
-11. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
-12. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
-13. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
+8. [Apr 07, 2024] getFloorSheet and getFloorSheetOf now works without raising exception
+9.  [Apr 05, 2024] Speed Improvement (remove dependency from requests to httpx, http calls are now faster)
+10. [Mar 23, 2024] add setup.py to ease installation process.
+11. [Oct 20, 2023] moved api_endpoints, headers, and dummy_data to loadable json file
+12. [Oct 10, 2023] Module(files, folders) restructuring
+13. [Sep 24, 2023] [Fixed SSL CERTIFICATE_VERIFY_FAILED](#Fixed:-SSL-Error).
+14. [Sep 24, 2023] Branch `15_feb_2023` is now merged with the master branch.
+15. [Feb 15, 2023] ~~checkout new branch 15_feb_2023 to adjust for new change in Nepse.~~
 
 
 # Fix Details 

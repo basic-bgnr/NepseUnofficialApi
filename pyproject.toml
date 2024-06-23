@@ -41,3 +41,10 @@ nepse-cli = "nepse:main_cli"
 
 [tool.setuptools.dynamic]
 version = {attr = "nepse.__version__"}
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+color = true
+diff = true
+verbose = true
