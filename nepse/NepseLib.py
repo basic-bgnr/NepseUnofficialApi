@@ -393,8 +393,7 @@ class AsyncNepse(_Nepse):
 
     async def getFloorSheet(self, show_progress=False):
 
-        url = f"{self.api_end_points['floor_sheet']}?&size={
-            self.floor_sheet_size}&sort=contractId,desc"
+        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
         sheet = await self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )

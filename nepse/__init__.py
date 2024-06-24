@@ -183,6 +183,7 @@ def start_server():
         "CompanyList": "/CompanyList",
         "SecurityList": "/SecurityList",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
+        "LiveMarket": "/LiveMarket",
     }
 
     nepse = Nepse()
@@ -408,6 +409,12 @@ def start_server():
             {"scripsDetails": scrips_details, "sectorsDetails": sector_details}
         )
 
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    @app.route(routes["LiveMarket"])
+    def getLiveMarket():
+        response = flask.jsonify(nepse.getLiveMarket())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
