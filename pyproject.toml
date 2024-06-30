@@ -16,10 +16,10 @@ classifiers = [
         "Programming Language :: Python :: 3.8",
     ]
 dependencies = [
-    "httpx[http2]>=0.27.0",
-    "pywasm>=1.0.8",
-    "flask>=2.3.2",
-    "tqdm>=4.66.2",
+    "httpx[http2]==0.27.0",
+    "pywasm==1.0.8",
+    "flask==2.3.2",
+    "tqdm==4.66.2",
 ]
 
 [project.urls]
