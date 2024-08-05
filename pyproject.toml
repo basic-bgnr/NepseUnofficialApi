@@ -19,7 +19,7 @@ dependencies = [
     "httpx[http2]==0.27.0",
     "pywasm==1.0.8",
     "flask==3.0.3",
-    "tqdm==4.66.4",
+    "tqdm==4.66.5",
 ]
 
 [project.urls]
