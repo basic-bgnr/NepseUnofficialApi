@@ -16,7 +16,7 @@ classifiers = [
         "Programming Language :: Python :: 3.8",
     ]
 dependencies = [
-    "httpx[http2]==0.27.0",
+    "httpx[http2]==0.27.2",
     "pywasm==1.0.8",
     "flask==3.0.3",
     "tqdm==4.66.5",
