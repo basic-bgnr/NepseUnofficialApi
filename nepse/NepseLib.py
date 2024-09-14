@@ -1,5 +1,10 @@
 from nepse.TokenUtils import TokenManager, AsyncTokenManager
 from nepse.DummyIDUtils import DummyIDManager, AsyncDummyIDManager
+from nepse.Errors import (
+    NepseInvalidClientRequest,
+    NepseInvalidServerResponse,
+    NepseNetworkError,
+)
 
 from datetime import date, datetime, timedelta
 from collections import defaultdict
@@ -296,9 +301,25 @@ class AsyncNepse(_Nepse):
                     else self.headers
                 ),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+        except (httpx.RemoteProtocolError, httpx.ReadError):
             return await self.requestGETAPI(url, include_authorization_headers)
+        else:
+            match response.status_code:
+                case status if status >= 200 and status < 300:
+                    return response.json()
+
+                case 400:
+                    raise NepseInvalidClientRequest()
+
+                case 401:  # access token expired
+                    await self.token_manager.update()
+                    return await self.requestGETAPI(url, include_authorization_headers)
+
+                case 502:
+                    raise NepseInvalidServerResponse()
+
+                case _:
+                    raise NepseNetworkError()
 
     async def requestPOSTAPI(self, url, payload_generator):
         try:
@@ -307,9 +328,25 @@ class AsyncNepse(_Nepse):
                 headers=await self.getAuthorizationHeaders(),
                 data=json.dumps({"id": await payload_generator()}),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+        except (httpx.RemoteProtocolError, httpx.ReadError):
             return await self.requestPOSTAPI(url, payload_generator)
+        else:
+            match response.status_code:
+                case status if status >= 200 and status < 300:
+                    return response.json()
+
+                case 400:
+                    raise NepseInvalidClientRequest()
+
+                case 401:  # access token expired
+                    await self.token_manager.update()
+                    return await self.requestPOSTAPI(url, payload_generator)
+
+                case 502:
+                    raise NepseInvalidServerResponse()
+
+                case _:
+                    raise NepseNetworkError()
 
     ############################################### PUBLIC METHODS###############################################
     # api requiring get method
@@ -516,9 +553,25 @@ class Nepse(_Nepse):
                     else self.headers
                 ),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+        except (httpx.RemoteProtocolError, httpx.ReadError):
             return self.requestGETAPI(url, include_authorization_headers)
+        else:
+            match response.status_code:
+                case status if status >= 200 and status < 300:
+                    return response.json()
+
+                case 400:
+                    raise NepseInvalidClientRequest()
+
+                case 401:  # access token expired
+                    self.token_manager.update()
+                    return self.requestGETAPI(url)
+
+                case 502:
+                    raise NepseInvalidServerResponse()
+
+                case _:
+                    raise NepseNetworkError()
 
     def requestPOSTAPI(self, url, payload_generator):
         try:
@@ -527,9 +580,25 @@ class Nepse(_Nepse):
                 headers=self.getAuthorizationHeaders(),
                 data=json.dumps({"id": payload_generator()}),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+        except (httpx.RemoteProtocolError, httpx.ReadError):
             return self.requestPOSTAPI(url, payload_generator)
+        else:
+            match response.status_code:
+                case status if status >= 200 and status < 300:
+                    return response.json()
+
+                case 400:
+                    raise NepseInvalidClientRequest()
+
+                case 401:  # access token expired
+                    self.token_manager.update()
+                    return self.requestPOSTAPI(url, payload_generator)
+
+                case 502:
+                    raise NepseInvalidServerResponse()
+
+                case _:
+                    raise NepseNetworkError()
 
     ############################################### PUBLIC METHODS###############################################
     # api requiring get method
