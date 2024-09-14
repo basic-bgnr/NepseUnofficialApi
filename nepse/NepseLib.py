@@ -456,7 +456,9 @@ class AsyncNepse(_Nepse):
             url=f"{url}&page={page_number}",
             payload_generator=self.getPOSTPayloadIDForFloorSheet,
         )
-        current_sheet_content = current_sheet["floorsheets"]["content"]
+        current_sheet_content = (
+            current_sheet["floorsheets"]["content"] if current_sheet else []
+        )
         if progress_counter:
             try:
                 next(progress_counter)
