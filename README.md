@@ -5,7 +5,7 @@ Deciphers the authentication key to access the api.
 
 # How to Install?
 ### A. Using Git + pip
-1. Make sure your python version >= 3.8.0
+1. Make sure your python version >= 3.10
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
 1. Install the package
