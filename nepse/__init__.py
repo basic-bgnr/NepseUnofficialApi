@@ -149,8 +149,6 @@ def get_floorsheet(show_progress):
 
 def show_status():
 
-    from nepse import Nepse
-
     share_market = Nepse()
     share_market.setTLSVerification(False)
 
@@ -163,8 +161,6 @@ def start_server():
 
     import flask
     from flask import Flask, request
-
-    from nepse import Nepse
 
     routes = {
         "PriceVolume": "/PriceVolume",
