@@ -296,7 +296,7 @@ class AsyncNepse(_Nepse):
                     else self.headers
                 ),
             )
-        except (httpx.RemoteProtocolError, httpx.ReadError):
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
             return await self.requestGETAPI(url, include_authorization_headers)
         else:
             match response.status_code:
@@ -323,7 +323,7 @@ class AsyncNepse(_Nepse):
                 headers=await self.getAuthorizationHeaders(),
                 data=json.dumps({"id": await payload_generator()}),
             )
-        except (httpx.RemoteProtocolError, httpx.ReadError):
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
             return await self.requestPOSTAPI(url, payload_generator)
         else:
             match response.status_code:
@@ -546,7 +546,7 @@ class Nepse(_Nepse):
                     else self.headers
                 ),
             )
-        except (httpx.RemoteProtocolError, httpx.ReadError):
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
             return self.requestGETAPI(url, include_authorization_headers)
         else:
             match response.status_code:
@@ -573,7 +573,7 @@ class Nepse(_Nepse):
                 headers=self.getAuthorizationHeaders(),
                 data=json.dumps({"id": payload_generator()}),
             )
-        except (httpx.RemoteProtocolError, httpx.ReadError):
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
             return self.requestPOSTAPI(url, payload_generator)
         else:
             match response.status_code:
