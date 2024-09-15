@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from collections import defaultdict
 
 import tqdm
+import tqdm.asyncio
 import asyncio
 import json
 import httpx
