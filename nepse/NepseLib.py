@@ -671,7 +671,9 @@ class Nepse(_Nepse):
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
+        page_range = (
+            tqdm.tqdm(range(1, max_page)) if show_progress else range(1, max_page)
+        )
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",

@@ -1,9 +1,10 @@
-import pywasm
 import time
 import pathlib
 import asyncio
 
 from datetime import datetime
+
+import pywasm
 
 
 class _TokenManager:

@@ -101,7 +101,6 @@ def show_version():
 
 def dump_to_std_file_descriptor(output_destination, output_content, convert_to_csv):
 
-    from pprint import pprint
     import json
 
     parsed_output = (
@@ -124,7 +123,7 @@ def convert_json_to_csv(json_content):
     csv_file = StringIO()
     csv_writer = csv.writer(csv_file)
 
-    if type(json_content) is dict:
+    if isinstance(json_content, dict):
         csv_writer.writerow(json_content.keys())  # headers
         csv_writer.writerow(json_content.values())  # values
     else:
@@ -201,7 +200,7 @@ def start_server():
         return response
 
     def _getSummary():
-        response = dict()
+        response = {}
         for obj in nepse.getSummary():
             response[obj["detail"]] = obj["value"]
         return response
@@ -213,7 +212,7 @@ def start_server():
         return response
 
     def _getNepseIndex():
-        response = dict()
+        response = {}
         for obj in nepse.getNepseIndex():
             response[obj["index"]] = obj
         return response
@@ -225,7 +224,7 @@ def start_server():
         return response
 
     def _getNepseSubIndices():
-        response = dict()
+        response = {}
         for obj in nepse.getNepseSubIndices():
             response[obj["index"]] = obj
         return response
@@ -315,8 +314,6 @@ def start_server():
         gainers = {obj["symbol"]: obj for obj in nepse.getTopGainers()}
         losers = {obj["symbol"]: obj for obj in nepse.getTopLosers()}
 
-        price_vol_info = {obj["symbol"]: obj for obj in nepse.getPriceVolume()}
-
         sector_sub_indices = _getNepseSubIndices()
         # this is done since nepse sub indices and sector name are different
         sector_mapper = {
@@ -335,7 +332,7 @@ def start_server():
             "Tradings": "Trading Index",
         }
 
-        scrips_details = dict()
+        scrips_details = {}
         for symbol, company in companies.items():
             company_details = {}
 
@@ -382,7 +379,7 @@ def start_server():
 
             scrips_details[symbol] = company_details
 
-        sector_details = dict()
+        sector_details = {}
         sectors = {company["sectorName"] for company in companies.values()}
         for sector in sectors:
             total_trades, total_trade_quantity, total_turnover = 0, 0, 0
