@@ -9,7 +9,7 @@ from nepse.Errors import (
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 
-from tqdm import tqdm
+import tqdm
 import asyncio
 import json
 import httpx
@@ -432,26 +432,24 @@ class AsyncNepse(_Nepse):
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
 
+        # page 0 is already downloaded so starting from 1
         page_range = range(1, max_page)
-
-        if show_progress:
-            progress_counter = (_ for _ in tqdm(page_range))
-            next(progress_counter)  # first page has already been downloaded
-        else:
-            progress_counter = None
-
         awaitables = map(
             lambda page_number: self._getFloorSheetPageNumber(
                 url,
                 page_number,
-                progress_counter,
             ),
             page_range,
         )
-        floor_sheets = [floor_sheets] + await asyncio.gather(*awaitables)
+        if show_progress:
+            remaining_floor_sheets = await tqdm.asyncio.tqdm.gather(*awaitables)
+        else:
+            remaining_floor_sheets = await asyncio.gather(*awaitables)
+
+        floor_sheets = [floor_sheets] + remaining_floor_sheets
         return [row for array in floor_sheets for row in array]
 
-    async def _getFloorSheetPageNumber(self, url, page_number, progress_counter=None):
+    async def _getFloorSheetPageNumber(self, url, page_number):
         current_sheet = await self.requestPOSTAPI(
             url=f"{url}&page={page_number}",
             payload_generator=self.getPOSTPayloadIDForFloorSheet,
@@ -459,11 +457,6 @@ class AsyncNepse(_Nepse):
         current_sheet_content = (
             current_sheet["floorsheets"]["content"] if current_sheet else []
         )
-        if progress_counter:
-            try:
-                next(progress_counter)
-            except StopIteration:
-                pass
         return current_sheet_content
 
     async def getFloorSheetOf(self, symbol, business_date=None):
