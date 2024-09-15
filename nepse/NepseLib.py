@@ -300,7 +300,7 @@ class AsyncNepse(_Nepse):
             return await self.requestGETAPI(url, include_authorization_headers)
         else:
             match response.status_code:
-                case status if status >= 200 and status < 300:
+                case status if 200 <= status < 300:
                     return response.json()
 
                 case 400:
@@ -327,7 +327,7 @@ class AsyncNepse(_Nepse):
             return await self.requestPOSTAPI(url, payload_generator)
         else:
             match response.status_code:
-                case status if status >= 200 and status < 300:
+                case status if 200 <= status < 300:
                     return response.json()
 
                 case 400:
@@ -543,7 +543,7 @@ class Nepse(_Nepse):
             return self.requestGETAPI(url, include_authorization_headers)
         else:
             match response.status_code:
-                case status if status >= 200 and status < 300:
+                case status if 200 <= status < 300:
                     return response.json()
 
                 case 400:
@@ -570,7 +570,7 @@ class Nepse(_Nepse):
             return self.requestPOSTAPI(url, payload_generator)
         else:
             match response.status_code:
-                case status if status >= 200 and status < 300:
+                case status if 200 <= status < 300:
                     return response.json()
 
                 case 400:
