@@ -8,3 +8,7 @@ class NepseInvalidClientRequest(Exception):
 
 class NepseNetworkError(Exception):
     pass
+
+
+class NepseTokenExpired(Exception):
+    pass
