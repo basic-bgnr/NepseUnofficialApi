@@ -75,10 +75,10 @@ class _Nepse:
     def init_client(self, tls_verify):
         pass
 
-    def requestGETAPI(url):
+    def requestGETAPI(self, url):
         pass
 
-    def requestPOSTAPI(url, payload_generator):
+    def requestPOSTAPI(self, url, payload_generator):
         pass
 
     ############################################### PUBLIC METHODS###############################################
