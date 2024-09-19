@@ -26,7 +26,8 @@ class _Nepse:
             market_status_function=self.getMarketStatus,
             date_function=datetime.now,
         )
-
+        # explicitly set value to True, can be disabled by user using setTLSVerification method
+        self._tls_verify = True
         # list of all company that were listed in nepse (including delisted but doesn't include promoter shares)
         self.company_symbol_id_keymap = None
         # list of all valid company that are not delisted (includes promoter share)
@@ -240,7 +241,7 @@ class AsyncNepse(_Nepse):
     def __init__(self):
         super().__init__(AsyncTokenManager, AsyncDummyIDManager)
         # internal flag to set tls verification true or false during http request
-        self.init_client(tls_verify=True)
+        self.init_client(tls_verify=self._tls_verify)
 
     ############################################### PRIVATE METHODS###############################################
     async def getPOSTPayloadIDForScrips(self):
@@ -489,7 +490,7 @@ class Nepse(_Nepse):
     def __init__(self):
         super().__init__(TokenManager, DummyIDManager)
         # internal flag to set tls verification true or false during http request
-        self.init_client(tls_verify=True)
+        self.init_client(tls_verify=self._tls_verify)
 
     ############################################### PRIVATE METHODS###############################################
     def getPOSTPayloadIDForScrips(self):
