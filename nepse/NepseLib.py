@@ -82,6 +82,15 @@ class _Nepse:
     def requestPOSTAPI(self, url, payload_generator):
         pass
 
+    # These 3 functions maybe both sync/async which needs to be implemented by the the child class
+    def getPOSTPayloadIDForScrips(self):
+        pass
+
+    def getPOSTPayloadID(self):
+        pass
+
+    def getPOSTPayloadIDForFloorSheet(self):
+        pass
     ############################################### PUBLIC METHODS###############################################
     def setTLSVerification(self, flag):
         self._tls_verify = flag
