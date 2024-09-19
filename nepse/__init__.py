@@ -1,5 +1,4 @@
-from nepse.NepseLib import Nepse
-from nepse.NepseLib import AsyncNepse
+from nepse.NepseLib import AsyncNepse, Nepse
 
 
 # function added to reduce namespace pollution (importing datetime)
