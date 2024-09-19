@@ -47,3 +47,7 @@ line-length = 88
 target-version = ['py310']
 color = true
 verbose = true
+
+[tool.isort]
+profile = "black"
+verbose = true
