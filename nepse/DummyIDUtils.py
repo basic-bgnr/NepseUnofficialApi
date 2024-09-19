@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date, datetime
+from datetime import datetime
 
 
 class _DummyIDManager:
@@ -162,23 +162,23 @@ def testDummyManager():
 
     dummy_manager = DummyIDManager()
 
-    # dummy_manager.setDateFunction(today_friday)
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setDateFunction(today_friday)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setDateFunction(today_saturday)
-    # dummy_manager.setMarketStatusFunction(saturday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setDateFunction(today_saturday)
+    dummy_manager.setMarketStatusFunction(saturday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
     dummy_manager.setDateFunction(today_saturday)
     dummy_manager.setMarketStatusFunction(saturday)
@@ -207,6 +207,8 @@ def testDummyManager():
     print(dummy_manager)
 
     dummy_manager.setDateFunction(today_monday)
+    dummy_manager.setMarketStatusFunction(monday)
+
     dummy_manager.getDummyID()
     print(dummy_manager)
     dummy_manager.getDummyID()
