@@ -47,8 +47,7 @@ class AsyncDummyIDManager(_DummyIDManager):
                 self.update_completed.set()
                 self.update_started.clear()
                 return
-            else:
-                await self.update_completed.wait()
+            await self.update_completed.wait()
 
         # check is day has already passed
         # print("whey", self.date_stamp.date(), today.date())
