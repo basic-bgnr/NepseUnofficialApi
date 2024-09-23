@@ -13,8 +13,8 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.3.5.dev2"
-__release_date__ = timestamp(2024, 9, 19)
+__version__ = "0.4.0"
+__release_date__ = timestamp(2024, 9, 23)
 
 
 def main_cli():
