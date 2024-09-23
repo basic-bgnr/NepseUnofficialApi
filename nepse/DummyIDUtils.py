@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date, datetime
+from datetime import datetime
 
 
 class _DummyIDManager:
@@ -35,6 +35,7 @@ class AsyncDummyIDManager(_DummyIDManager):
     async def populateData(self, force=False):
         today = self.date_function()
 
+        # executes only if self.data is not initialized or force flag set to True is passed
         if self.data is None or force:
             if not self.update_started.is_set():
                 self.update_started.set()
@@ -47,37 +48,38 @@ class AsyncDummyIDManager(_DummyIDManager):
                 self.update_completed.set()
                 self.update_started.clear()
                 return
-            else:
-                await self.update_completed.wait()
+            await self.update_completed.wait()
 
-        # check is day has already passed
-        # print("whey", self.date_stamp.date(), today.date())
-
+        # check if day has already passed and another co-routine to update it is already started
+        # if that's the case then just wait for that coroutine to complete itself.
         if self.date_stamp.date() < today.date():
-
-            if not self.update_started.is_set():
+            if self.update_started.is_set():
+                await self.update_completed.wait()
+            else:
+                # set event
                 self.update_started.set()
                 self.update_completed.clear()
+
                 new_data = await self.market_status_function()
+
+                new_converted_date = self.convertToDateTime(new_data["asOf"])
+
+                # check if nepse date is equal to current date
+                if new_converted_date.date() == today.date():
+                    self.data = new_data
+                    self.dummy_id = self.data["id"]
+                    self.date_stamp = new_converted_date
+
+                # nepse date is not equal to current date which means nepse is closed
+                # in such case we set the date stamp to today so that we dont have to check it everytime
+                else:
+                    self.data = new_data
+                    self.dummy_id = self.data["id"]
+                    self.date_stamp = today
+
+                # clear event
                 self.update_completed.set()
                 self.update_started.clear()
-            else:
-                await self.update_completed.wait()
-
-            new_converted_date = self.convertToDateTime(new_data["asOf"])
-
-            # check if nepse date is equal to current date
-            if new_converted_date.date() == today.date():
-                self.data = new_data
-                self.dummy_id = self.data["id"]
-                self.date_stamp = new_converted_date
-
-            # nepse date is not equal to current date which means nepse is closed
-            # in such case we set the date stamp to today so that we dont have to check it everytime
-            else:
-                self.data = new_data
-                self.dummy_id = self.data["id"]
-                self.date_stamp = today
 
     async def getDummyID(self):
         await self.populateData()
@@ -96,9 +98,6 @@ class DummyIDManager(_DummyIDManager):
             self.dummy_id = self.data["id"]
             self.date_stamp = today
             return
-
-        # check is day has already passed
-        # print("whey", self.date_stamp.date(), today.date())
 
         if self.date_stamp.date() < today.date():
             new_data = self.market_status_function()
@@ -162,23 +161,23 @@ def testDummyManager():
 
     dummy_manager = DummyIDManager()
 
-    # dummy_manager.setDateFunction(today_friday)
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setDateFunction(today_friday)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setMarketStatusFunction(friday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setMarketStatusFunction(friday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
-    # dummy_manager.setDateFunction(today_saturday)
-    # dummy_manager.setMarketStatusFunction(saturday)
-    # dummy_manager.getDummyID()
-    # print(dummy_manager)
+    dummy_manager.setDateFunction(today_saturday)
+    dummy_manager.setMarketStatusFunction(saturday)
+    dummy_manager.getDummyID()
+    print(dummy_manager)
 
     dummy_manager.setDateFunction(today_saturday)
     dummy_manager.setMarketStatusFunction(saturday)
@@ -207,6 +206,8 @@ def testDummyManager():
     print(dummy_manager)
 
     dummy_manager.setDateFunction(today_monday)
+    dummy_manager.setMarketStatusFunction(monday)
+
     dummy_manager.getDummyID()
     print(dummy_manager)
     dummy_manager.getDummyID()

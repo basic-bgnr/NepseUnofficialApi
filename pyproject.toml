@@ -44,6 +44,10 @@ version = {attr = "nepse.__version__"}
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py310']
 color = true
+verbose = true
+
+[tool.isort]
+profile = "black"
 verbose = true

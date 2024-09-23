@@ -1,14 +1,21 @@
-from nepse.TokenUtils import TokenManager, AsyncTokenManager
-from nepse.DummyIDUtils import DummyIDManager, AsyncDummyIDManager
-
-from datetime import date, datetime, timedelta
-from collections import defaultdict
-
-from tqdm import tqdm
 import asyncio
 import json
-import httpx
 import pathlib
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+
+import httpx
+import tqdm
+import tqdm.asyncio
+
+from nepse.DummyIDUtils import AsyncDummyIDManager, DummyIDManager
+from nepse.Errors import (
+    NepseInvalidClientRequest,
+    NepseInvalidServerResponse,
+    NepseNetworkError,
+    NepseTokenExpired,
+)
+from nepse.TokenUtils import AsyncTokenManager, TokenManager
 
 
 class _Nepse:
@@ -20,7 +27,8 @@ class _Nepse:
             market_status_function=self.getMarketStatus,
             date_function=datetime.now,
         )
-
+        # explicitly set value to True, can be disabled by user using setTLSVerification method
+        self._tls_verify = True
         # list of all company that were listed in nepse (including delisted but doesn't include promoter shares)
         self.company_symbol_id_keymap = None
         # list of all valid company that are not delisted (includes promoter share)
@@ -69,11 +77,38 @@ class _Nepse:
     def init_client(self, tls_verify):
         pass
 
-    def requestGETAPI(url):
+    def requestGETAPI(self, url):
         pass
 
-    def requestPOSTAPI(url, payload_generator):
+    def requestPOSTAPI(self, url, payload_generator):
         pass
+
+    # These 3 functions maybe both sync/async which needs to be implemented by the the child class
+    def getPOSTPayloadIDForScrips(self):
+        pass
+
+    def getPOSTPayloadID(self):
+        pass
+
+    def getPOSTPayloadIDForFloorSheet(self):
+        pass
+
+    def handle_response(self, response):
+        match response.status_code:
+            case status if 200 <= status < 300:
+                return response.json()
+
+            case 400:
+                raise NepseInvalidClientRequest()
+
+            case 401:  # access token expired
+                raise NepseTokenExpired()
+
+            case 502:
+                raise NepseInvalidServerResponse()
+
+            case _:
+                raise NepseNetworkError()
 
     ############################################### PUBLIC METHODS###############################################
     def setTLSVerification(self, flag):
@@ -234,7 +269,7 @@ class AsyncNepse(_Nepse):
     def __init__(self):
         super().__init__(AsyncTokenManager, AsyncDummyIDManager)
         # internal flag to set tls verification true or false during http request
-        self.init_client(tls_verify=True)
+        self.init_client(tls_verify=self._tls_verify)
 
     ############################################### PRIVATE METHODS###############################################
     async def getPOSTPayloadIDForScrips(self):
@@ -279,12 +314,7 @@ class AsyncNepse(_Nepse):
         return headers
 
     def init_client(self, tls_verify):
-        # limits prevent rate limit imposed by nepse
-        # (setting connection > 2, raises protocol error, so the following value is used as default)
-        limits = httpx.Limits(max_keepalive_connections=2, max_connections=2)
-        self.client = httpx.AsyncClient(
-            verify=tls_verify, limits=limits, http2=False, timeout=100
-        )
+        self.client = httpx.AsyncClient(verify=tls_verify, http2=False, timeout=100)
 
     async def requestGETAPI(self, url, include_authorization_headers=True):
         try:
@@ -296,8 +326,11 @@ class AsyncNepse(_Nepse):
                     else self.headers
                 ),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+            return self.handle_response(response)
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+            return await self.requestGETAPI(url, include_authorization_headers)
+        except NepseTokenExpired:
+            await self.token_manager.update()
             return await self.requestGETAPI(url, include_authorization_headers)
 
     async def requestPOSTAPI(self, url, payload_generator):
@@ -307,8 +340,11 @@ class AsyncNepse(_Nepse):
                 headers=await self.getAuthorizationHeaders(),
                 data=json.dumps({"id": await payload_generator()}),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+            return self.handle_response(response)
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+            return await self.requestPOSTAPI(url, payload_generator)
+        except NepseTokenExpired:
+            await self.token_manager.update()
             return await self.requestPOSTAPI(url, payload_generator)
 
     ############################################### PUBLIC METHODS###############################################
@@ -400,36 +436,31 @@ class AsyncNepse(_Nepse):
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
 
+        # page 0 is already downloaded so starting from 1
         page_range = range(1, max_page)
-
-        if show_progress:
-            progress_counter = (_ for _ in tqdm(page_range))
-            next(progress_counter)  # first page has already been downloaded
-        else:
-            progress_counter = None
-
         awaitables = map(
             lambda page_number: self._getFloorSheetPageNumber(
                 url,
                 page_number,
-                progress_counter,
             ),
             page_range,
         )
-        floor_sheets = [floor_sheets] + await asyncio.gather(*awaitables)
+        if show_progress:
+            remaining_floor_sheets = await tqdm.asyncio.tqdm.gather(*awaitables)
+        else:
+            remaining_floor_sheets = await asyncio.gather(*awaitables)
+
+        floor_sheets = [floor_sheets] + remaining_floor_sheets
         return [row for array in floor_sheets for row in array]
 
-    async def _getFloorSheetPageNumber(self, url, page_number, progress_counter=None):
+    async def _getFloorSheetPageNumber(self, url, page_number):
         current_sheet = await self.requestPOSTAPI(
             url=f"{url}&page={page_number}",
             payload_generator=self.getPOSTPayloadIDForFloorSheet,
         )
-        current_sheet_content = current_sheet["floorsheets"]["content"]
-        if progress_counter:
-            try:
-                next(progress_counter)
-            except StopIteration:
-                pass
+        current_sheet_content = (
+            current_sheet["floorsheets"]["content"] if current_sheet else []
+        )
         return current_sheet_content
 
     async def getFloorSheetOf(self, symbol, business_date=None):
@@ -461,7 +492,7 @@ class Nepse(_Nepse):
     def __init__(self):
         super().__init__(TokenManager, DummyIDManager)
         # internal flag to set tls verification true or false during http request
-        self.init_client(tls_verify=True)
+        self.init_client(tls_verify=self._tls_verify)
 
     ############################################### PRIVATE METHODS###############################################
     def getPOSTPayloadIDForScrips(self):
@@ -500,11 +531,7 @@ class Nepse(_Nepse):
         return headers
 
     def init_client(self, tls_verify):
-        # limits prevent rate limit imposed by nepse
-        limits = httpx.Limits(max_keepalive_connections=0, max_connections=1)
-        self.client = httpx.Client(
-            verify=tls_verify, limits=limits, http2=True, timeout=100
-        )
+        self.client = httpx.Client(verify=tls_verify, http2=True, timeout=100)
 
     def requestGETAPI(self, url, include_authorization_headers=True):
         try:
@@ -516,9 +543,12 @@ class Nepse(_Nepse):
                     else self.headers
                 ),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+            return self.handle_response(response)
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
             return self.requestGETAPI(url, include_authorization_headers)
+        except NepseTokenExpired:
+            self.token_manager.update()
+            return self.requestGETAPI(url)
 
     def requestPOSTAPI(self, url, payload_generator):
         try:
@@ -527,8 +557,11 @@ class Nepse(_Nepse):
                 headers=self.getAuthorizationHeaders(),
                 data=json.dumps({"id": payload_generator()}),
             )
-            return response.json() if response.text else {}
-        except httpx.RemoteProtocolError:
+            return self.handle_response(response)
+        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+            return self.requestPOSTAPI(url, payload_generator)
+        except NepseTokenExpired:
+            self.token_manager.update()
             return self.requestPOSTAPI(url, payload_generator)
 
     ############################################### PUBLIC METHODS###############################################
@@ -616,7 +649,9 @@ class Nepse(_Nepse):
         )
         floor_sheets = sheet["floorsheets"]["content"]
         max_page = sheet["floorsheets"]["totalPages"]
-        page_range = tqdm(range(1, max_page)) if show_progress else range(1, max_page)
+        page_range = (
+            tqdm.tqdm(range(1, max_page)) if show_progress else range(1, max_page)
+        )
         for page_number in page_range:
             current_sheet = self.requestPOSTAPI(
                 url=f"{url}&page={page_number}",
