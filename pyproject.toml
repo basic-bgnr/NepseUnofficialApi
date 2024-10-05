@@ -5,15 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nepse"
 dynamic = ["version"]
-authors = [ { name="basic-bgnr"} ]
+authors = [ { name="basic-bgnr" } ]
 description = "Unofficial API to interface with https://www.nepalstock.com"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
-        "Development Status :: 0.1.0 - Beta",
         "Intended Audience :: Research",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.8",
     ]
 dependencies = [
     "httpx[http2]==0.27.2",
