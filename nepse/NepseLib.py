@@ -470,8 +470,7 @@ class AsyncNepse(_Nepse):
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
-        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={
-            business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
+        url = f"{self.api_end_points['company_floorsheet']}{company_id}?&businessDate={business_date}&size={self.floor_sheet_size}&sort=contractid,desc"
         sheet = await self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
