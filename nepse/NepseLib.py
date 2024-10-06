@@ -59,8 +59,7 @@ class _Nepse:
             self.headers["Referer"] = self.base_url.replace("https://", "")
 
     def load_json_api_end_points(self):
-        json_file_path = f"{pathlib.Path(
-            __file__).parent}/data/API_ENDPOINTS.json"
+        json_file_path = f"{pathlib.Path(__file__).parent}/data/API_ENDPOINTS.json"
         with open(json_file_path, "r") as json_file:
             self.api_end_points = json.load(json_file)
 
@@ -68,8 +67,7 @@ class _Nepse:
         return f"{self.base_url}{api_url}"
 
     def load_json_dummy_data(self):
-        json_file_path = f"{pathlib.Path(
-            __file__).parent}/data/DUMMY_DATA.json"
+        json_file_path = f"{pathlib.Path(__file__).parent}/data/DUMMY_DATA.json"
         with open(json_file_path, "r") as json_file:
             self.dummy_data = json.load(json_file)
 
