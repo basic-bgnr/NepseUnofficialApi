@@ -410,8 +410,8 @@ def start_server():
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
-    @app.route(f"{routes["MarketDepth"]}", defaults={"symbol": None})
-    @app.route(f"{routes["MarketDepth"]}/<string:symbol>")
+    @app.route(f"{routes['MarketDepth']}", defaults={"symbol": None})
+    @app.route(f"{routes['MarketDepth']}/<string:symbol>")
     def getMarketDepth(symbol):
         if symbol:
             response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
