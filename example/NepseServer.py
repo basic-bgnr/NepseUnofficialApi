@@ -186,7 +186,6 @@ def getLiveMarket():
 @app.route(f"{routes['MarketDepth']}/<string:symbol>")
 def getMarketDepth(symbol):
     if symbol:
-        # Says AttributeError: 'Nepse' object has no attribute 'getSymbolMarketDepth'
         response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
         response.headers.add("Access-Control-Allow-Origin", "*")
     else:
