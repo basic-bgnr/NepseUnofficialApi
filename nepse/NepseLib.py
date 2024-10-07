@@ -486,7 +486,7 @@ class AsyncNepse(_Nepse):
         else:
             floor_sheets = []
         return floor_sheets
-    
+
     async def getSymbolMarketDepth(self, symbol):
         symbol = symbol.upper()
         try:
@@ -497,7 +497,6 @@ class AsyncNepse(_Nepse):
         except json.JSONDecodeError:
             print("JSON Decode Error")
             return None
-
 
 
 class Nepse(_Nepse):
