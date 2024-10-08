@@ -1,6 +1,7 @@
+from json import JSONDecodeError
+
 import flask
 from flask import Flask, request
-from json import JSONDecodeError
 
 try:
     from nepse import Nepse
