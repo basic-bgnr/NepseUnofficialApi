@@ -489,14 +489,10 @@ class AsyncNepse(_Nepse):
 
     async def getSymbolMarketDepth(self, symbol):
         symbol = symbol.upper()
-        try:
-            company_id = self.getSecurityIDKeyMap()[symbol]
-            url = f"{self.api_end_points['market-depth']}{company_id}/"
-            result = await self.requestGETAPI(url=url)
-            return result
-        except json.JSONDecodeError:
-            print("JSON Decode Error")
-            return None
+        company_id = self.getSecurityIDKeyMap()[symbol]
+        url = f"{self.api_end_points['market-depth']}{company_id}/"
+        result = await self.requestGETAPI(url=url)
+        return result
 
 
 class Nepse(_Nepse):
@@ -698,10 +694,6 @@ class Nepse(_Nepse):
 
     def getSymbolMarketDepth(self, symbol):
         symbol = symbol.upper()
-        try:
-            company_id = self.getSecurityIDKeyMap()[symbol]
-            url = f"{self.api_end_points['market-depth']}{company_id}/"
-            return self.requestGETAPI(url=url)
-        except json.JSONDecodeError:
-            print("JSON Decode Error")
-            return None
+        company_id = self.getSecurityIDKeyMap()[symbol]
+        url = f"{self.api_end_points['market-depth']}{company_id}/"
+        return self.requestGETAPI(url=url)

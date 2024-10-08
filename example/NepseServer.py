@@ -1,5 +1,6 @@
 import flask
 from flask import Flask, request
+from json import JSONDecodeError
 
 try:
     from nepse import Nepse
@@ -186,8 +187,12 @@ def getLiveMarket():
 @app.route(f"{routes['MarketDepth']}/<string:symbol>")
 def getMarketDepth(symbol):
     if symbol:
-        response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
-        response.headers.add("Access-Control-Allow-Origin", "*")
+        try:
+            response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
+        except JSONDecodeError:
+            return None
     else:
         symbols = nepse.getSecurityList()
         response = "<BR>".join(
