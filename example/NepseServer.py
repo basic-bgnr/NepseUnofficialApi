@@ -200,7 +200,7 @@ def getMarketDepth(symbol):
             response.headers.add("Access-Control-Allow-Origin", "*")
             return response
         except JSONDecodeError:
-            return None
+            return flask.jsonify(None)
     else:
         symbols = nepse.getSecurityList()
         response = "<BR>".join(

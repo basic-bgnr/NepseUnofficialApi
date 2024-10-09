@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 from nepse.NepseLib import AsyncNepse, Nepse
 
 
@@ -421,8 +423,12 @@ def start_server():
     @app.route(f"{routes['MarketDepth']}/<string:symbol>")
     def getMarketDepth(symbol):
         if symbol:
-            response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
-            response.headers.add("Access-Control-Allow-Origin", "*")
+            try:
+                response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
+                response.headers.add("Access-Control-Allow-Origin", "*")
+                return response
+            except JSONDecodeError:
+                return flask.jsonify(None)
         else:
             symbols = nepse.getSecurityList()
             response = "<BR>".join(
@@ -431,7 +437,6 @@ def start_server():
                     for symbol in symbols
                 ]
             )
-
-        return response
+            return response
 
     app.run(debug=True, host="0.0.0.0", port=8000)
