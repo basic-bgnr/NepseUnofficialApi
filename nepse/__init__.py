@@ -177,6 +177,7 @@ def start_server():
         "SecurityList": "/SecurityList",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
         "LiveMarket": "/LiveMarket",
+        "MarketDepth": "/MarketDepth",
     }
 
     nepse = Nepse()
@@ -407,6 +408,23 @@ def start_server():
     def getLiveMarket():
         response = flask.jsonify(nepse.getLiveMarket())
         response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    @app.route(f"{routes['MarketDepth']}", defaults={"symbol": None})
+    @app.route(f"{routes['MarketDepth']}/<string:symbol>")
+    def getMarketDepth(symbol):
+        if symbol:
+            response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+        else:
+            symbols = nepse.getSecurityList()
+            response = "<BR>".join(
+                [
+                    f"<a href={routes['MarketDepth']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                    for symbol in symbols
+                ]
+            )
+
         return response
 
     app.run(debug=True, host="0.0.0.0", port=8000)
