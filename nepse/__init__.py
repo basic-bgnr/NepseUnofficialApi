@@ -13,7 +13,7 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.5.0dev0"
+__version__ = "0.5.0.dev1"
 __release_date__ = timestamp(2024, 10, 9)
 
 
@@ -277,13 +277,20 @@ def start_server():
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
-    @app.route(routes["DailyScripPriceGraph"])
-    def getDailyScripPriceGraph():
-        args = request.args
-        param_scrip_name = args.get("symbol")
-        print(param_scrip_name)
-        response = flask.jsonify(nepse.getDailyScripPriceGraph(param_scrip_name))
-        response.headers.add("Access-Control-Allow-Origin", "*")
+    @app.route(f"{routes['DailyScripPriceGraph']}", defaults={"symbol": None})
+    @app.route(f"{routes['DailyScripPriceGraph']}/<string:symbol>")
+    def getDailyScripPriceGraph(symbol):
+        if symbol:
+            response = flask.jsonify(nepse.getDailyScripPriceGraph(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+        else:
+            symbols = nepse.getSecurityList()
+            response = "<BR>".join(
+                [
+                    f"<a href={routes['DailyScripPriceGraph']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                    for symbol in symbols
+                ]
+            )
         return response
 
     @app.route(routes["CompanyList"])

@@ -146,13 +146,20 @@ def getDailyNepseIndexGraph():
     return response
 
 
-@app.route(routes["DailyScripPriceGraph"])
-def getDailyScripPriceGraph():
-    args = request.args
-    param_scrip_name = args.get("symbol")
-    print(param_scrip_name)
-    response = flask.jsonify(nepse.getDailyScripPriceGraph(param_scrip_name))
-    response.headers.add("Access-Control-Allow-Origin", "*")
+@app.route(f"{routes['DailyScripPriceGraph']}", defaults={"symbol": None})
+@app.route(f"{routes['DailyScripPriceGraph']}/<string:symbol>")
+def getDailyScripPriceGraph(symbol):
+    if symbol:
+        response = flask.jsonify(nepse.getDailyScripPriceGraph(symbol))
+        response.headers.add("Access-Control-Allow-Origin", "*")
+    else:
+        symbols = nepse.getSecurityList()
+        response = "<BR>".join(
+            [
+                f"<a href={routes['DailyScripPriceGraph']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                for symbol in symbols
+            ]
+        )
     return response
 
 
