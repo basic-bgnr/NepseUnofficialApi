@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [ { name="basic-bgnr" } ]
 description = "Unofficial API to interface with https://www.nepalstock.com"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
         "Intended Audience :: Research",
         "Operating System :: POSIX :: Linux",
@@ -42,7 +42,7 @@ version = {attr = "nepse.__version__"}
 
 [tool.black]
 line-length = 88
-target-version = ['py310']
+target-version = ['py311']
 color = true
 verbose = true
 
