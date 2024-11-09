@@ -148,10 +148,14 @@ class TokenManager(_TokenManager):
 
 class TokenParser:
     def __init__(self):
-        self.runtime = pywasm.load(f"{pathlib.Path(__file__).parent}/data/css.wasm")
+        self.runtime = pywasm.core.Runtime()
+        self.wasm_module = self.runtime.instance_from_file(
+            f"{pathlib.Path(__file__).parent}/data/css.wasm"
+        )
 
     def parse_token_response(self, token_response):
-        n = self.runtime.exec(
+        n = self.runtime.invocate(
+            self.wasm_module,
             "cdx",
             [
                 token_response["salt1"],
@@ -160,8 +164,9 @@ class TokenParser:
                 token_response["salt4"],
                 token_response["salt5"],
             ],
-        )
-        l = self.runtime.exec(
+        )[0]
+        l = self.runtime.invocate(
+            self.wasm_module,
             "rdx",
             [
                 token_response["salt1"],
@@ -170,8 +175,9 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
-        o = self.runtime.exec(
+        )[0]
+        o = self.runtime.invocate(
+            self.wasm_module,
             "bdx",
             [
                 token_response["salt1"],
@@ -180,8 +186,9 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
-        p = self.runtime.exec(
+        )[0]
+        p = self.runtime.invocate(
+            self.wasm_module,
             "ndx",
             [
                 token_response["salt1"],
@@ -190,8 +197,9 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
-        q = self.runtime.exec(
+        )[0]
+        q = self.runtime.invocate(
+            self.wasm_module,
             "mdx",
             [
                 token_response["salt1"],
@@ -200,9 +208,10 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
+        )[0]
 
-        a = self.runtime.exec(
+        a = self.runtime.invocate(
+            self.wasm_module,
             "cdx",
             [
                 token_response["salt2"],
@@ -211,8 +220,9 @@ class TokenParser:
                 token_response["salt5"],
                 token_response["salt4"],
             ],
-        )
-        b = self.runtime.exec(
+        )[0]
+        b = self.runtime.invocate(
+            self.wasm_module,
             "rdx",
             [
                 token_response["salt2"],
@@ -221,8 +231,9 @@ class TokenParser:
                 token_response["salt4"],
                 token_response["salt5"],
             ],
-        )
-        c = self.runtime.exec(
+        )[0]
+        c = self.runtime.invocate(
+            self.wasm_module,
             "bdx",
             [
                 token_response["salt2"],
@@ -231,8 +242,9 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
-        d = self.runtime.exec(
+        )[0]
+        d = self.runtime.invocate(
+            self.wasm_module,
             "ndx",
             [
                 token_response["salt2"],
@@ -241,8 +253,9 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
-        e = self.runtime.exec(
+        )[0]
+        e = self.runtime.invocate(
+            self.wasm_module,
             "mdx",
             [
                 token_response["salt2"],
@@ -251,13 +264,10 @@ class TokenParser:
                 token_response["salt3"],
                 token_response["salt5"],
             ],
-        )
+        )[0]
 
         access_token = token_response["accessToken"]
         refresh_token = token_response["refreshToken"]
-
-        # print(f"refresh token index {a}, {b}, {c}, {d}, {e}", refresh_token)
-        # print(f"access token index {n}, {l}, {o}, {p}, {q}", access_token)
 
         parsed_access_token = (
             access_token[0:n]
