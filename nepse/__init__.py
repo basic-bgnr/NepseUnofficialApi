@@ -15,7 +15,7 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.5.0.dev3"
+__version__ = "0.5.0.dev4"
 __release_date__ = timestamp(2024, 11, 9)
 
 
