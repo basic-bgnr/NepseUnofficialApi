@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 from nepse.NepseLib import AsyncNepse, Nepse
 
 
@@ -13,8 +15,8 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.5.0"
-__release_date__ = timestamp(2024, 10, 5)
+__version__ = "0.5.0.dev4"
+__release_date__ = timestamp(2024, 11, 9)
 
 
 def main_cli():
@@ -177,6 +179,7 @@ def start_server():
         "SecurityList": "/SecurityList",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
         "LiveMarket": "/LiveMarket",
+        "MarketDepth": "/MarketDepth",
     }
 
     nepse = Nepse()
@@ -276,13 +279,20 @@ def start_server():
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
-    @app.route(routes["DailyScripPriceGraph"])
-    def getDailyScripPriceGraph():
-        args = request.args
-        param_scrip_name = args.get("symbol")
-        print(param_scrip_name)
-        response = flask.jsonify(nepse.getDailyScripPriceGraph(param_scrip_name))
-        response.headers.add("Access-Control-Allow-Origin", "*")
+    @app.route(f"{routes['DailyScripPriceGraph']}", defaults={"symbol": None})
+    @app.route(f"{routes['DailyScripPriceGraph']}/<string:symbol>")
+    def getDailyScripPriceGraph(symbol):
+        if symbol:
+            response = flask.jsonify(nepse.getDailyScripPriceGraph(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+        else:
+            symbols = nepse.getSecurityList()
+            response = "<BR>".join(
+                [
+                    f"<a href={routes['DailyScripPriceGraph']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                    for symbol in symbols
+                ]
+            )
         return response
 
     @app.route(routes["CompanyList"])
@@ -408,5 +418,25 @@ def start_server():
         response = flask.jsonify(nepse.getLiveMarket())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
+
+    @app.route(f"{routes['MarketDepth']}", defaults={"symbol": None})
+    @app.route(f"{routes['MarketDepth']}/<string:symbol>")
+    def getMarketDepth(symbol):
+        if symbol:
+            try:
+                response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
+                response.headers.add("Access-Control-Allow-Origin", "*")
+                return response
+            except JSONDecodeError:
+                return flask.jsonify(None)
+        else:
+            symbols = nepse.getSecurityList()
+            response = "<BR>".join(
+                [
+                    f"<a href={routes['MarketDepth']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                    for symbol in symbols
+                ]
+            )
+            return response
 
     app.run(debug=True, host="0.0.0.0", port=8000)

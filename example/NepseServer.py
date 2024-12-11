@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 import flask
 from flask import Flask, request
 
@@ -34,6 +36,7 @@ routes = {
     "SecurityList": "/SecurityList",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
     "LiveMarket": "/LiveMarket",
+    "MarketDepth": "/MarketDepth",
 }
 
 
@@ -143,13 +146,20 @@ def getDailyNepseIndexGraph():
     return response
 
 
-@app.route(routes["DailyScripPriceGraph"])
-def getDailyScripPriceGraph():
-    args = request.args
-    param_scrip_name = args.get("symbol")
-    print(param_scrip_name)
-    response = flask.jsonify(nepse.getDailyScripPriceGraph(param_scrip_name))
-    response.headers.add("Access-Control-Allow-Origin", "*")
+@app.route(f"{routes['DailyScripPriceGraph']}", defaults={"symbol": None})
+@app.route(f"{routes['DailyScripPriceGraph']}/<string:symbol>")
+def getDailyScripPriceGraph(symbol):
+    if symbol:
+        response = flask.jsonify(nepse.getDailyScripPriceGraph(symbol))
+        response.headers.add("Access-Control-Allow-Origin", "*")
+    else:
+        symbols = nepse.getSecurityList()
+        response = "<BR>".join(
+            [
+                f"<a href={routes['DailyScripPriceGraph']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                for symbol in symbols
+            ]
+        )
     return response
 
 
@@ -179,6 +189,27 @@ def getLiveMarket():
     response = flask.jsonify(nepse.getLiveMarket())
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
+
+@app.route(f"{routes['MarketDepth']}", defaults={"symbol": None})
+@app.route(f"{routes['MarketDepth']}/<string:symbol>")
+def getMarketDepth(symbol):
+    if symbol:
+        try:
+            response = flask.jsonify(nepse.getSymbolMarketDepth(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
+        except JSONDecodeError:
+            return flask.jsonify(None)
+    else:
+        symbols = nepse.getSecurityList()
+        response = "<BR>".join(
+            [
+                f"<a href={routes['MarketDepth']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                for symbol in symbols
+            ]
+        )
+        return response
 
 
 @app.route(routes["TradeTurnoverTransactionSubindices"])
