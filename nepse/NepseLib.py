@@ -489,8 +489,8 @@ class AsyncNepse(_Nepse):
 
     async def getSymbolMarketDepth(self, symbol):
         symbol = symbol.upper()
-        company_id = self.getSecurityIDKeyMap()[symbol]
-        url = f"{self.api_end_points['market-depth']}{company_id}/"
+        company_id = await self.getSecurityIDKeyMap()
+        url = f"{self.api_end_points['market-depth']}{company_id[symbol]}/"
         result = await self.requestGETAPI(url=url)
         return result
 
