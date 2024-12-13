@@ -75,6 +75,8 @@ pip uninstall nepse
 ```
 
 # Development
+1. [Dec 13, 2024]
+   * PR [#39](https://github.com/basic-bgnr/NepseUnofficialApi/pull/39) ([@surajrimal07](https://github.com/surajrimal07)) merged (patch fix for async bug)
 1. [Dec 11, 2024]
    * PR [#24](https://github.com/basic-bgnr/NepseUnofficialApi/pull/24) ([@iamaakashbasnet](https://github.com/iamaakashbasnet)) merged to master (enables access to stock marketdepth)
    * Minimum python version is upgraded from 3.10 to 3.11 to support version upgrade of `pywasm`
