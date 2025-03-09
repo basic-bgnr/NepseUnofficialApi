@@ -11,11 +11,20 @@ import tqdm.asyncio
 from nepse.DummyIDUtils import AsyncDummyIDManager, DummyIDManager
 from nepse.Errors import (
     NepseInvalidClientRequest,
+    NepseInvalidScrip,
     NepseInvalidServerResponse,
     NepseNetworkError,
     NepseTokenExpired,
 )
 from nepse.TokenUtils import AsyncTokenManager, TokenManager
+
+
+class ScripIDMap(dict):
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            raise NepseInvalidScrip
 
 
 class _Nepse:
@@ -96,7 +105,12 @@ class _Nepse:
     def handle_response(self, response):
         match response.status_code:
             case status if 200 <= status < 300:
-                return response.json()
+                try:
+                    return response.json()
+                except json.decoder.JSONDecodeError:
+                    # when invalid client request is processed by nepse, in certain cases
+                    # it may return http success code 200-299 but give non json output.
+                    raise NepseInvalidClientRequest()
 
             case 400:
                 raise NepseInvalidClientRequest()
@@ -108,7 +122,9 @@ class _Nepse:
                 raise NepseInvalidServerResponse()
 
             case _:
-                raise NepseNetworkError()
+                # This error wraps httpx response object
+                # to give additional information to the user
+                raise NepseNetworkError(response)
 
     ############################################### PUBLIC METHODS###############################################
     def setTLSVerification(self, flag):
@@ -387,17 +403,17 @@ class AsyncNepse(_Nepse):
     async def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
             company_list = await self.getCompanyList()
-            self.company_symbol_id_keymap = {
-                company["symbol"]: company["id"] for company in company_list
-            }
+            self.company_symbol_id_keymap = ScripIDMap(
+                {company["symbol"]: company["id"] for company in company_list}
+            )
         return self.company_symbol_id_keymap
 
     async def getSecurityIDKeyMap(self, force_update=False):
         if self.security_symbol_id_keymap is None or force_update:
             security_list = await self.getSecurityList()
-            self.security_symbol_id_keymap = {
-                security["symbol"]: security["id"] for security in security_list
-            }
+            self.security_symbol_id_keymap = ScripIDMap(
+                {security["symbol"]: security["id"] for security in security_list}
+            )
         return self.security_symbol_id_keymap
 
     async def getCompanyPriceVolumeHistory(
@@ -611,17 +627,17 @@ class Nepse(_Nepse):
     def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
             company_list = self.getCompanyList()
-            self.company_symbol_id_keymap = {
-                company["symbol"]: company["id"] for company in company_list
-            }
+            self.company_symbol_id_keymap = ScripIDMap(
+                {company["symbol"]: company["id"] for company in company_list}
+            )
         return self.company_symbol_id_keymap
 
     def getSecurityIDKeyMap(self, force_update=False):
         if self.security_symbol_id_keymap is None or force_update:
             security_list = self.getSecurityList()
-            self.security_symbol_id_keymap = {
-                security["symbol"]: security["id"] for security in security_list
-            }
+            self.security_symbol_id_keymap = ScripIDMap(
+                {security["symbol"]: security["id"] for security in security_list}
+            )
         return self.security_symbol_id_keymap
 
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
