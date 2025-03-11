@@ -327,7 +327,12 @@ class AsyncNepse(_Nepse):
                 ),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.LocalProtocolError,
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+        ):
             return await self.requestGETAPI(url, include_authorization_headers)
         except NepseTokenExpired:
             await self.token_manager.update()
@@ -341,7 +346,12 @@ class AsyncNepse(_Nepse):
                 data=json.dumps({"id": await payload_generator()}),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.LocalProtocolError,
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+        ):
             return await self.requestPOSTAPI(url, payload_generator)
         except NepseTokenExpired:
             await self.token_manager.update()
@@ -551,7 +561,12 @@ class Nepse(_Nepse):
                 ),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.LocalProtocolError,
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+        ):
             return self.requestGETAPI(url, include_authorization_headers)
         except NepseTokenExpired:
             self.token_manager.update()
@@ -565,7 +580,12 @@ class Nepse(_Nepse):
                 data=json.dumps({"id": payload_generator()}),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.LocalProtocolError,
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+        ):
             return self.requestPOSTAPI(url, payload_generator)
         except NepseTokenExpired:
             self.token_manager.update()
