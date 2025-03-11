@@ -538,7 +538,7 @@ class Nepse(_Nepse):
         return headers
 
     def init_client(self, tls_verify):
-        self.client = httpx.Client(verify=tls_verify, http2=True, timeout=100)
+        self.client = httpx.Client(verify=tls_verify, http2=False, timeout=100)
 
     def requestGETAPI(self, url, include_authorization_headers=True):
         try:
@@ -555,7 +555,7 @@ class Nepse(_Nepse):
             return self.requestGETAPI(url, include_authorization_headers)
         except NepseTokenExpired:
             self.token_manager.update()
-            return self.requestGETAPI(url)
+            return self.requestGETAPI(url, include_authorization_headers)
 
     def requestPOSTAPI(self, url, payload_generator):
         try:
