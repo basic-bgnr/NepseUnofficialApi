@@ -1,6 +1,6 @@
 [![Status](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml/badge.svg)](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml)  
 # NepseUnofficialApi
-Unofficial library to interface with nepalstock.com
+Unofficial library to interface with [nepalstock.com](https://www.nepalstock.com/)
 Deciphers the authentication key to access the api.
 
 # How to Install?
