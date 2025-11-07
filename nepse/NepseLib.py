@@ -155,6 +155,9 @@ class _Nepse:
     def getLiveMarket(self):
         return self.requestGETAPI(url=self.api_end_points["live-market"])
 
+    def getNepseIndexHistory(self, size=20):
+        return self.requestGETAPI(url=f"{self.api_end_points['nepse-index-history']}?size={size}")
+
     # api requiring post method
     def getPriceVolumeHistory(self, business_date=None):
         url = f"{self.api_end_points['todays_price']}?&size=500&businessDate={business_date}"
