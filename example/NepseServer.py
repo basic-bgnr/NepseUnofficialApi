@@ -37,6 +37,7 @@ routes = {
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
     "LiveMarket": "/LiveMarket",
     "MarketDepth": "/MarketDepth",
+    "MarketDepthOddLot": "/MarketDepthOddLot",
 }
 
 
@@ -206,6 +207,27 @@ def getMarketDepth(symbol):
         response = "<BR>".join(
             [
                 f"<a href={routes['MarketDepth']}/{symbol['symbol']}> {symbol['symbol']} </a>"
+                for symbol in symbols
+            ]
+        )
+        return response
+
+
+@app.route(f"{routes['MarketDepthOddLot']}", defaults={"symbol": None})
+@app.route(f"{routes['MarketDepthOddLot']}/<string:symbol>")
+def getMarketDepthOddLot(symbol):
+    if symbol:
+        try:
+            response = flask.jsonify(nepse.getSymbolOddLotMarketDepth(symbol))
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
+        except JSONDecodeError:
+            return flask.jsonify(None)
+    else:
+        symbols = nepse.getSecurityList()
+        response = "<BR>".join(
+            [
+                f"<a href={routes['MarketDepthOddLot']}/{symbol['symbol']}> {symbol['symbol']} </a>"
                 for symbol in symbols
             ]
         )

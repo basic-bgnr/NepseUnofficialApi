@@ -494,6 +494,13 @@ class AsyncNepse(_Nepse):
         result = await self.requestGETAPI(url=url)
         return result
 
+    async def getSymbolOddLotMarketDepth(self, symbol):
+        symbol = symbol.upper()
+        company_id = await self.getSecurityIDKeyMap()
+        url = f"{self.api_end_points['market-depth-odd-lot']}{company_id[symbol]}/"
+        result = await self.requestGETAPI(url=url)
+        return result
+
 
 class Nepse(_Nepse):
     def __init__(self):
@@ -696,4 +703,10 @@ class Nepse(_Nepse):
         symbol = symbol.upper()
         company_id = self.getSecurityIDKeyMap()[symbol]
         url = f"{self.api_end_points['market-depth']}{company_id}/"
+        return self.requestGETAPI(url=url)
+
+    def getSymbolOddLotMarketDepth(self, symbol):
+        symbol = symbol.upper()
+        company_id = self.getSecurityIDKeyMap()[symbol]
+        url = f"{self.api_end_points['market-depth-odd-lot']}{company_id}"
         return self.requestGETAPI(url=url)
