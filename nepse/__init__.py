@@ -136,13 +136,22 @@ def convert_json_to_csv(json_content):
     return csv_file.getvalue()
 
 
-def get_floorsheet(show_progress):
+def get_floorsheet_async(show_progress):
     import asyncio
 
     share_market = AsyncNepse()
     share_market.setTLSVerification(False)
 
     floorsheet = asyncio.run(share_market.getFloorSheet(show_progress))
+    return floorsheet
+
+
+def get_floorsheet(show_progress):
+
+    share_market = Nepse()
+    share_market.setTLSVerification(False)
+
+    floorsheet = share_market.getFloorSheet(show_progress)
     return floorsheet
 
 
