@@ -75,6 +75,8 @@ pip uninstall nepse
 ```
 
 # Development
+1. [Mar 11, 2026]
+   * Reverted to Non-Async floorsheet downloader. see [issue](https://github.com/basic-bgnr/NepseUnofficialApi/issues/54), thanks to [@ravibhusal](https://github.com/ravibhusal), floorsheet data may be incomplete when using `AsyncNepse`.
 1. [Dec 13, 2024]
    * PR [#39](https://github.com/basic-bgnr/NepseUnofficialApi/pull/39) ([@surajrimal07](https://github.com/surajrimal07)) merged to master(patch fix for async bug)
 1. [Dec 11, 2024]

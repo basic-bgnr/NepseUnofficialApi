@@ -15,8 +15,8 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.6.1dev1"
-__release_date__ = timestamp(2024, 12, 27)
+__version__ = "0.6.2"
+__release_date__ = timestamp(2026, 3, 11)
 
 
 def main_cli():
@@ -136,13 +136,22 @@ def convert_json_to_csv(json_content):
     return csv_file.getvalue()
 
 
-def get_floorsheet(show_progress):
+def get_floorsheet_async(show_progress):
     import asyncio
 
     share_market = AsyncNepse()
     share_market.setTLSVerification(False)
 
     floorsheet = asyncio.run(share_market.getFloorSheet(show_progress))
+    return floorsheet
+
+
+def get_floorsheet(show_progress):
+
+    share_market = Nepse()
+    share_market.setTLSVerification(False)
+
+    floorsheet = share_market.getFloorSheet(show_progress)
     return floorsheet
 
 
