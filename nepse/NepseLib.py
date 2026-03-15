@@ -327,7 +327,12 @@ class AsyncNepse(_Nepse):
                 ),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+        ):
             return await self.requestGETAPI(url, include_authorization_headers)
         except NepseTokenExpired:
             await self.token_manager.update()
@@ -341,7 +346,12 @@ class AsyncNepse(_Nepse):
                 data=json.dumps({"id": await payload_generator()}),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+        ):
             return await self.requestPOSTAPI(url, payload_generator)
         except NepseTokenExpired:
             await self.token_manager.update()
@@ -458,10 +468,13 @@ class AsyncNepse(_Nepse):
             url=f"{url}&page={page_number}",
             payload_generator=self.getPOSTPayloadIDForFloorSheet,
         )
-        current_sheet_content = (
-            current_sheet["floorsheets"]["content"] if current_sheet else []
-        )
-        return current_sheet_content
+        # check if the sheet is empty .The sheet should not actually be empty,
+        # but Nepse sometimes return empty sheet. In such case we simply request the page again.
+        if current_sheet == []:
+            print(f"Empty page: {page_number} received, retrying ......")
+            return await self._getFloorSheetPageNumber(url, page_number)
+        else:
+            return current_sheet["floorsheets"]["content"]
 
     async def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
@@ -551,7 +564,12 @@ class Nepse(_Nepse):
                 ),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+        ):
             return self.requestGETAPI(url, include_authorization_headers)
         except NepseTokenExpired:
             self.token_manager.update()
@@ -565,7 +583,12 @@ class Nepse(_Nepse):
                 data=json.dumps({"id": payload_generator()}),
             )
             return self.handle_response(response)
-        except (httpx.RemoteProtocolError, httpx.ReadError, httpx.ConnectError):
+        except (
+            httpx.RemoteProtocolError,
+            httpx.ReadError,
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+        ):
             return self.requestPOSTAPI(url, payload_generator)
         except NepseTokenExpired:
             self.token_manager.update()
