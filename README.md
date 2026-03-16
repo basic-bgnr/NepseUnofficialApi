@@ -74,6 +74,14 @@ Running the following command will remove the package from the system.
 pip uninstall nepse
 ```
 
+# Debugging
+When you run this command
+```
+nepse-cli --get-floorsheet --output-file floor.json
+```
+if you get an error like nepse-cli command not found or recognized in terminal then please make sure you put python scripts in PATH in environmental variables. 
+[See how to add environment variables](https://realpython.com/add-python-to-path/)
+
 # Development
 1. [Mar 11, 2026]
    * Reverted to Non-Async floorsheet downloader. see [issue](https://github.com/basic-bgnr/NepseUnofficialApi/issues/54), thanks to [@ravibhusal](https://github.com/ravibhusal), floorsheet data may be incomplete when using `AsyncNepse`.
