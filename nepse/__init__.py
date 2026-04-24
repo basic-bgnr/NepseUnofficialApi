@@ -1,3 +1,4 @@
+# PYTHON_ARGCOMPLETE_OK
 from json import JSONDecodeError
 
 from nepse.NepseLib import AsyncNepse, Nepse
@@ -16,12 +17,14 @@ __all__ = [
 ]
 
 __version__ = "0.6.2"
-__release_date__ = timestamp(2026, 3, 11)
+__release_date__ = timestamp(2026, 4, 24)
 
 
 def main_cli():
 
     import argparse
+
+    import argcomplete
 
     parser = argparse.ArgumentParser(description="cmdline interface to nepalstock.com")
 
@@ -79,6 +82,7 @@ def main_cli():
         help="sets the visibility of progress base to False",
     )
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     output_content = None
 
