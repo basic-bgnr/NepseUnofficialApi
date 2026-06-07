@@ -84,6 +84,11 @@ pip uninstall nepse
 ```
 
 # Development
+1. [Jun 07, 2026]
+    * Floorsheet now downloads completely using `AsyncNepse` PR [#59](https://github.com/basic-bgnr/NepseUnofficialApi/pull/59)
+    * module is now directly runnable without installing the package PR [#61](https://github.com/basic-bgnr/NepseUnofficialApi/pull/61)
+    * docs improvement, thanks [@learningscience](https://github.com/learningcscience)
+    * dependencies update
 1. [Mar 11, 2026]
    * Reverted to Non-Async floorsheet downloader. see [issue](https://github.com/basic-bgnr/NepseUnofficialApi/issues/54), thanks to [@ravibhusal](https://github.com/ravibhusal), floorsheet data may be incomplete when using `AsyncNepse`.
 1. [Dec 13, 2024]
