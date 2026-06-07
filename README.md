@@ -1,14 +1,14 @@
 [![Status](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml/badge.svg)](https://github.com/basic-bgnr/NepseUnofficialApi/actions/workflows/actions.yml)  
 # NepseUnofficialApi
 Unofficial library to interface with [nepalstock.com](https://www.nepalstock.com/)
-Deciphers the authentication key to access the api.
+Deciphers the authentication key to access the API.
 
 # How to Install?
 ### A. Using Git + pip
 1. Make sure your python version >= 3.11
 1. Download this git repo into your local computer. 
 1. Change the directory to NepseUnofficialApi 
-1. Install the package
+1. Install the package or [run the module directly](#1-without-installing-the-package)
 ```
 git clone https://github.com/basic-bgnr/NepseUnofficialApi.git 
 cd NepseUnofficialApi
@@ -35,7 +35,16 @@ nepse.setTLSVerification(False) #This is temporary, until nepse sorts its ssl ce
 await nepse.getCompanyList()
 ```
 ### B. Cli tool
-After installing the package, `nepse-cli` cmdline tool is available
+#### 1. Without installing the package
+After cloning the repo, the module can be run directly from the base-directory using cmdline
+```
+dev└─ $ python -m nepse --help
+```
+All cmdline args same as `nepse-cli` is available when running the module directly
+
+#### 2. After installing the package
+
+`nepse-cli` cmdline tool is available
 ```
 dev└─ $ nepse-cli --help
 usage: nepse-cli [-h] [-v] [--start-server] [--show-status] [--get-floorsheet] [--output-file FILE] [--to-csv] [--hide-progressbar]
