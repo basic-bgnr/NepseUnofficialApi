@@ -441,9 +441,9 @@ class AsyncNepse(_Nepse):
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    async def getFloorSheet(self, show_progress=False, batch_size=None):
-
-        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+    async def getFloorSheet(self, show_progress=False, batch_size=None, symbol=None):
+        stock_id = (await self.getCompanyIDKeyMap())[symbol.upper()] if symbol else ""
+        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc&stockId={stock_id}"
         sheet = await self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
@@ -685,8 +685,9 @@ class Nepse(_Nepse):
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
 
-    def getFloorSheet(self, show_progress=False):
-        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
+    def getFloorSheet(self, show_progress=False, symbol=None):
+        stock_id = self.getCompanyIDKeyMap()[symbol.upper()] if symbol else ""
+        url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc&stockId={stock_id}"
         sheet = self.requestPOSTAPI(
             url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
         )
