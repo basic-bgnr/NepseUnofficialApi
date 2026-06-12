@@ -1,3 +1,4 @@
+# PYTHON_ARGCOMPLETE_OK
 from json import JSONDecodeError
 
 from nepse.NepseLib import AsyncNepse, Nepse
@@ -15,13 +16,15 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.7.0"
-__release_date__ = timestamp(2026, 6, 7)
+__version__ = "0.7.0dev1"
+__release_date__ = timestamp(2026, 6, 11)
 
 
 def main_cli():
 
     import argparse
+
+    import argcomplete
 
     parser = argparse.ArgumentParser(description="cmdline interface to nepalstock.com")
 
@@ -33,67 +36,65 @@ def main_cli():
         dest="version",
         help="displays the version info",
     )
+    parser.set_defaults(func=lambda args: show_version() if args.version else None)
 
-    parser.add_argument(
-        "--start-server",
-        action="store_true",
-        default=False,
-        dest="start_server",
-        help="starts local server at 0.0.0.0:8000",
+    sub_parser = parser.add_subparsers(title="SubCommand help", metavar="")
+
+    start_server_parser = sub_parser.add_parser(
+        "start-server", help="starts local server at 0.0.0.0:{default=8000}"
     )
-    parser.add_argument(
-        "--show-status",
-        action="store_true",
-        default=False,
-        dest="show_status",
-        help="dumps Nepse status to the standard output",
+    start_server_parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="start server at particular port (if available)",
     )
-    parser.add_argument(
-        "--get-floorsheet",
-        action="store_true",
-        default=False,
-        dest="get_floorsheet",
-        help="dumps Nepse's floorsheet to the standard output",
+    start_server_parser.set_defaults(func=lambda args: start_server(port=args.port))
+
+    show_status_parser = sub_parser.add_parser(
+        "show-status", help="dumps Nepse status to the standard output"
+    )
+    show_status_parser.set_defaults(
+        func=lambda args: dump_to_std_file_descriptor(
+            output_content=show_status(), output_destination=None, convert_to_csv=False
+        )
     )
 
-    parser.add_argument(
+    floorsheet_parser = sub_parser.add_parser(
+        "get-floorsheet", help="dumps Nepse floorsheet to the standard output"
+    )
+    floorsheet_parser.add_argument(
         "--output-file",
+        type=str,
         action="store",
         metavar="FILE",
         default=None,
-        dest="output_file",
-        help="sets the output file for dumping the content",
+        help="sets the location of the output FILE to save the content",
     )
-    parser.add_argument(
+    floorsheet_parser.add_argument(
         "--to-csv",
         action="store_true",
         default=False,
-        dest="convert_to_csv",
         help="sets the output format from default[JSON] to CSV",
     )
-    parser.add_argument(
-        "--hide-progressbar",
+    floorsheet_parser.add_argument(
+        "--hide-progress",
         action="store_true",
         default=False,
-        dest="hide_progress",
-        help="sets the visibility of progress base to False",
+        help="hide the progress bar while content is downloading",
+    )
+    floorsheet_parser.set_defaults(
+        func=lambda args: dump_to_std_file_descriptor(
+            output_content=get_floorsheet(show_progress=not args.hide_progress),
+            output_destination=args.output_file,
+            convert_to_csv=args.to_csv,
+        )
     )
 
-    args = parser.parse_args()
-    output_content = None
+    argcomplete.autocomplete(parser)
 
-    if args.version:
-        show_version()
-    if args.start_server:
-        start_server()
-    if args.show_status:
-        output_content = show_status()
-    if args.get_floorsheet:
-        output_content = get_floorsheet(not args.hide_progress)
-    if output_content:
-        dump_to_std_file_descriptor(
-            args.output_file, output_content, convert_to_csv=args.convert_to_csv
-        )
+    args = parser.parse_args()
+    args.func(args)
 
 
 def show_version():
@@ -165,7 +166,7 @@ def show_status():
     return summary
 
 
-def start_server():
+def start_server(port=8000):
 
     import flask
     from flask import Flask, request
@@ -448,4 +449,4 @@ def start_server():
             )
             return response
 
-    app.run(debug=True, host="0.0.0.0", port=8000)
+    app.run(debug=True, host="0.0.0.0", port=port)

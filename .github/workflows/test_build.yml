@@ -27,7 +27,7 @@ jobs:
           pip install -r Requirements.txt
           
       - name: execute module 
-        run: python -m nepse
+        run: python -m nepse show-status
         
   formatter:
     runs-on: ubuntu-latest
