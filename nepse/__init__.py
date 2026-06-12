@@ -16,7 +16,7 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.7.0dev2"
+__version__ = "0.7.0dev3"
 __release_date__ = timestamp(2026, 6, 12)
 
 
@@ -83,9 +83,27 @@ def main_cli():
         default=False,
         help="hide the progress bar while content is downloading",
     )
+    floorsheet_parser.add_argument(
+        "--scrip-name",
+        type=str,
+        action="store",
+        metavar="SCRIP",
+        default=None,
+        help="downloads floorsheet for particular SCRIP only",
+    )
+    floorsheet_parser.add_argument(
+        "--async-downloader",
+        action="store_true",
+        default=False,
+        help="download the floorsheet asychronously",
+    )
     floorsheet_parser.set_defaults(
         func=lambda args: dump_to_std_file_descriptor(
-            output_content=get_floorsheet(show_progress=not args.hide_progress),
+            output_content=get_floorsheet(
+                show_progress=not args.hide_progress,
+                symbol=args.scrip_name,
+                async_downloader=args.async_downloader,
+            ),
             output_destination=args.output_file,
             convert_to_csv=args.to_csv,
         )
@@ -137,22 +155,27 @@ def convert_json_to_csv(json_content):
     return csv_file.getvalue()
 
 
-def get_floorsheet_async(show_progress):
+def get_floorsheet_async(show_progress, symbol=None):
     import asyncio
 
     share_market = AsyncNepse()
     share_market.setTLSVerification(False)
 
-    floorsheet = asyncio.run(share_market.getFloorSheet(show_progress))
+    floorsheet = asyncio.run(share_market.getFloorSheet(show_progress, symbol=symbol))
     return floorsheet
 
 
-def get_floorsheet(show_progress):
+def get_floorsheet(show_progress, symbol=None, async_downloader=None):
+    downloader = get_floorsheet_async if async_downloader else get_floorsheet_sync
+    return downloader(show_progress, symbol)
+
+
+def get_floorsheet_sync(show_progress, symbol=None):
 
     share_market = Nepse()
     share_market.setTLSVerification(False)
 
-    floorsheet = share_market.getFloorSheet(show_progress)
+    floorsheet = share_market.getFloorSheet(show_progress, symbol=symbol)
     return floorsheet
 
 
